@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import DebugOutput from './DebugOutput';
+import Board from './Board';
 
 import './App.css';
 
@@ -15,6 +16,7 @@ class App extends Component {
         <p className="App-intro">
           To get started, edit <code>src/App.js</code> and save to reload.
         </p>
+        <Board world={this.props.wholeState} />
         <DebugOutput completeState={this.props.wholeState}/>
       </div>
     );

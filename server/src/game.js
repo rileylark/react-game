@@ -8,16 +8,25 @@ var world = new p2.World({
 // Create an empty dynamic body
 var circleBody = new p2.Body({
     mass: 5,
-    position: [0, 10]
+    position: [10, 10]
+});
+
+const blocker = new p2.Body({
+    mass: 4,
+    position: [10.5, 1]
 });
 
 // Add a circle shape to the body
 var circleShape = new p2.Circle({ radius: 1 });
 circleBody.addShape(circleShape);
 
+const blockerShape = new p2.Circle({radius: 1});
+blocker.addShape(blockerShape);
+
 // ...and add the body to the world.
 // If we don't add it to the world, it won't be simulated.
 world.addBody(circleBody);
+world.addBody(blocker);
 
 // Create an infinite ground plane body
 var groundBody = new p2.Body({
@@ -35,8 +44,8 @@ var lastTime;
 
 // Animation loop
 export function animate(time){
-	console.log("Animating !");
-    console.log(circleBody.interpolatedPosition);
+	// console.log("Animating !");
+    // console.log(circleBody.interpolatedPosition);
 
     // Compute elapsed time since last render frame
     var deltaTime = lastTime ? (time - lastTime) / 1000 : 0;
@@ -60,4 +69,8 @@ export function renderWorld() {
     return {
         ball: renderBody(circleBody)
     }
+}
+
+export function pushUp() {
+    circleBody.position = [10, 10];
 }

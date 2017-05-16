@@ -1,10 +1,17 @@
 import { Server } from 'uws';
-import { animate, renderWorld } from './game';
+import { animate, renderWorld, pushUp } from './game';
 
 const wss = new Server({ port: 3001 });
  
-function onMessage(message) {
-    console.log('received: ' + message);
+function onMessage(messageJson) {
+    try {
+        const message = JSON.parse(messageJson);
+        if (message.messageType === 'pushUp') {
+            pushUp();
+        }
+    } catch (e) {
+
+    }
 }
  
 const connections = [];
@@ -12,10 +19,9 @@ const connections = [];
 wss.on('connection', function(ws) {
     connections.push(ws);
     ws.on('message', onMessage);
-    ws.send('something');
 });
 
-setInterval(() => animate(Date.now()), 250);
+setInterval(() => animate(Date.now()), 1000/30);
 
 setInterval(() => {
     const message = JSON.stringify({
@@ -26,4 +32,4 @@ setInterval(() => {
     connections.forEach((connection) => {
         connection.send(message);
     });
-}, 250);
+}, 1000/30);
