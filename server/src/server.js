@@ -1,13 +1,15 @@
 import { Server } from 'uws';
-import { animate, renderWorld, pushUp } from './game';
+import { animate, renderWorld, mergeNewControls } from './game';
 
 const wss = new Server({ port: 3001 });
  
 function onMessage(messageJson) {
     try {
         const message = JSON.parse(messageJson);
-        if (message.messageType === 'pushUp') {
-            pushUp();
+        if (message.messageType === 'controlChange') {
+            mergeNewControls({
+                up: !!message.controls.up
+            });
         }
     } catch (e) {
 

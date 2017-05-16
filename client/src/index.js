@@ -5,9 +5,9 @@ import './index.css';
 
 function render(state) {
   ReactDOM.render(
-  <App wholeState={state} />,
-  document.getElementById('root')
-);
+    <App wholeState={state} />,
+    document.getElementById('root')
+  );
 }
 
 render();
@@ -20,6 +20,28 @@ exampleSocket.onopen = function (event) {
     }));
   }, 5000);
 };
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'ArrowUp') {
+    exampleSocket.send(JSON.stringify({
+      messageType: 'controlChange',
+      controls: {
+        up: true
+      }
+    }));
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  if (e.code === 'ArrowUp') {
+    exampleSocket.send(JSON.stringify({
+      messageType: 'controlChange',
+      controls: {
+        up: false
+      }
+    }));
+  }
+});
 
 exampleSocket.onmessage = (message) => {
   const payload = JSON.parse(message.data);

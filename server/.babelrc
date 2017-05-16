@@ -1,1 +1,9 @@
-{ "presets": ["es2016","node6"] }
+{
+    "presets": [
+        "es2016",
+        "node6"
+    ],
+    "plugins": [
+        "transform-object-rest-spread"
+    ]
+}

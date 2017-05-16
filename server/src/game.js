@@ -11,22 +11,13 @@ var circleBody = new p2.Body({
     position: [10, 10]
 });
 
-const blocker = new p2.Body({
-    mass: 4,
-    position: [10.5, 1]
-});
-
 // Add a circle shape to the body
 var circleShape = new p2.Circle({ radius: 1 });
 circleBody.addShape(circleShape);
 
-const blockerShape = new p2.Circle({radius: 1});
-blocker.addShape(blockerShape);
-
 // ...and add the body to the world.
 // If we don't add it to the world, it won't be simulated.
 world.addBody(circleBody);
-world.addBody(blocker);
 
 // Create an infinite ground plane body
 var groundBody = new p2.Body({
@@ -71,6 +62,20 @@ export function renderWorld() {
     }
 }
 
-export function pushUp() {
-    circleBody.position = [10, 10];
+let currentControls = {
+    up: false
+};
+
+const boosterForce = 200;
+world.on('postStep', () => {
+    if (currentControls.up) {
+        circleBody.applyForceLocal([0, boosterForce]);
+    }
+});
+
+export function mergeNewControls(newControls) {
+    currentControls = {
+        ...currentControls,
+        ...newControls,
+    };
 }
