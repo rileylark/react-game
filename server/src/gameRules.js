@@ -6,53 +6,63 @@ const initialGameState = {
     },
 };
 
-
-function step(previousState, nextEvent) {
-    if (nextEvent.eventType === 'GOAL') {
+function stepInPlayingMode(previousState, action) {
+    if (action.eventType === 'GOAL') {
         return {
             ...previousState,
             score: {
                 ...previousState.score,
-                [nextEvent.team]: previousState.score[nextEvent.team] + 1,
+                [action.team]: previousState.score[action.team] + 1,
             }
         }
-    } else if (nextEvent.eventType === 'TIME') {
-        if (previousState.mode === 'playing') {
-
-            if (nextEvent.time > previousState.endTime) {
-                if (previousState.score.blue === previousState.score.red) {
-                    // overtime!
-                    return {
-                        ...previousState,
-                        currentTime: nextEvent.time,
-                        endTime: previousState.endTime + 30 * 1000,
-                    };
-                } else {
-                    return {
-                        mode: 'gameover',
-                        winner: previousState.score.blue > previousState.score.red ? 'blue' : 'red',
-                        nextGameStartTime: nextEvent.time + 10 * 1000,
-                        currentTime: nextEvent.time
-                    };
-                }
-            } else {
+    } else if (action.eventType === 'TIME') {
+        if (action.time > previousState.endTime) {
+            if (previousState.score.blue === previousState.score.red) {
+                // overtime!
                 return {
                     ...previousState,
-                    currentTime: nextEvent.time
-                }
-            }
-        } else if (previousState.mode === 'gameover') {
-            if (nextEvent.time > previousState.nextGameStartTime) {
-                return { ...initialGameState, endTime: nextEvent.time + 60 * 1000, currentTime: nextEvent.time };
+                    currentTime: action.time,
+                    endTime: previousState.endTime + 30 * 1000,
+                };
             } else {
-                return { 
-                    ...previousState,
-                    currentTime: nextEvent.time
-                }
+                return {
+                    mode: 'gameover',
+                    winner: previousState.score.blue > previousState.score.red ? 'blue' : 'red',
+                    nextGameStartTime: action.time + 10 * 1000,
+                    currentTime: action.time
+                };
+            }
+        } else {
+            return {
+                ...previousState,
+                currentTime: action.time
             }
         }
+    }
+
+    return previousState;
+}
+
+function stepInGameoverMode(previousState, action) {
+    if (action.eventType === 'TIME') {
+        if (action.time > previousState.nextGameStartTime) {
+            return { ...initialGameState, endTime: action.time + 60 * 1000, currentTime: action.time };
+        } else {
+            return {
+                ...previousState,
+                currentTime: action.time
+            }
+        }
+    } 
+
+    return previousState;
+}
+
+function step(previousState, nextEvent) {
+    if (previousState.mode === 'playing') {
+        return stepInPlayingMode(previousState, nextEvent);
     } else {
-        throw new Error("Unknown event type " + JSON.stringify(nextEvent));
+        return stepInGameoverMode(previousState, nextEvent);
     }
 }
 
