@@ -6,6 +6,8 @@ const levelDef = {
         { width: 102, height: 10, position: [0, 50] },
         { width: 10, height: 102, position: [-50, 0] },
         { width: 10, height: 102, position: [50, 0] },
+        { width: 5, height: 30, position: [-25, 0] },
+        { width: 5, height: 30, position: [25, 0] },
     ]
 };
 
@@ -90,7 +92,7 @@ function renderWall(wall) {
         height: wall.shape.height,
     }
 }
-export function renderWorld() {
+export function renderPlayers() {
     return {
         ball: renderBody(circleBody)
     }

@@ -10,7 +10,18 @@ function render(state) {
   );
 }
 
-render();
+
+let state = {
+  world: {
+    players: {},
+    level: {
+      walls: []
+    }
+  }
+};
+
+render(state);
+
 
 const exampleSocket = new WebSocket("ws://localhost:3001");
 exampleSocket.onopen = function (event) {
@@ -55,8 +66,25 @@ document.addEventListener('keyup', (e) => {
 exampleSocket.onmessage = (message) => {
   const payload = JSON.parse(message.data);
   if (payload.messageType === 'renderedWorld') {
-    render(payload.world);
+
+    state = {
+      ...state,
+      world: {
+        ...state.world,
+        players: payload.players
+      }
+    };
+
+    console.log(state);
+
+    render(state);
   } else if (payload.messageType === 'initialSetup') {
-    console.log("Got initial setup ", payload);
+    state = {
+      ...state,
+      world: {
+        ...state.world,
+        level: payload.level
+      }
+    }
   }
 };
