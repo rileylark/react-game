@@ -25,6 +25,12 @@ let state = {
       walls: [],
       goals: [],
     }
+  },
+  gameState: {
+    score: {
+      blue: 0,
+      red: 0,
+    }
   }
 };
 
@@ -87,16 +93,12 @@ exampleSocket.onmessage = (message) => {
       camera: cameraPosition,
       world: {
         ...state.world,
-        players: payload.players,
-        balls: payload.balls,
+        ...payload,
       }
     };
 
     render(state);
   } else if (payload.messageType === 'initialSetup') {
-
-    console.log(payload.level);
-    
     state = {
       ...state,
       myPlayerId: payload.yourId,
@@ -104,6 +106,11 @@ exampleSocket.onmessage = (message) => {
         ...state.world,
         level: payload.level,
       }
+    };
+  } else if (payload.messageType === 'gameState') {
+    state = {
+      ...state,
+      gameState: payload.gameState,
     };
   }
 };

@@ -1,5 +1,5 @@
 import { Server } from 'uws';
-import { animate, addPlayer, removePlayer, renderMovingThings, renderLevel, mergeNewControls } from './game';
+import { animate, addPlayer, removePlayer, renderMovingThings, renderGameState, renderLevel, mergeNewControls } from './game';
 
 const framerate = 60;
 
@@ -48,6 +48,17 @@ wss.on('connection', function(ws) {
 });
 
 setInterval(() => animate(Date.now()), 1000/framerate);
+
+setInterval(() => {
+    const message = JSON.stringify({
+        messageType: 'gameState',
+        gameState: renderGameState()
+    });
+
+    connections.forEach((connection) => {
+        connection.ws.send(message);
+    });
+}, 1000/2);
 
 setInterval(() => {
     const message = JSON.stringify({

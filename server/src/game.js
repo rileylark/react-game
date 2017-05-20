@@ -1,4 +1,5 @@
 import p2 from 'p2';
+import { createGame } from './gameRules';
 
 const levelDef = {
     walls: [
@@ -32,6 +33,14 @@ var world = new p2.World({
     gravity: [0, 0]
 });
 
+const game = createGame();
+setInterval(() => {
+    game.dispatch({
+        eventType: 'TIME',
+        time: Date.now()
+    });
+}, 1000);
+
 const steelMaterial = new p2.Material();
 
 const walls = levelDef.walls.map((wallDef) => {
@@ -55,6 +64,7 @@ goals.forEach((goal) => { world.addBody(goal.body) });
 
 const currentPlayers = {}; // map from player ID to player
 
+
 function makePlayer(playerId ) {
     const shape = new p2.Circle({ radius: 3, material: steelMaterial });
     var body = new p2.Body({
@@ -72,7 +82,7 @@ function makeBall() {
     var body = new p2.Body({
         mass: 1,
         position: [0, 0],
-        damping: 0.5,
+        damping: 0.25,
     });
 
     body.addShape(shape);
@@ -159,7 +169,7 @@ export function renderMovingThings() {
 
     return {
         players,
-        balls
+        balls,
     };
 }
 
@@ -170,6 +180,9 @@ export function renderLevel() {
     };
 }
 
+export function renderGameState() {
+    return game.getCurrentState();
+}
 
 const boosterForce = 200;
 
@@ -204,9 +217,12 @@ world.on('beginContact', ({shapeA, shapeB}) => {
     [gameBall].forEach((ball) => {
         goals.forEach((goal) => {
             if (shapes.indexOf(ball.shape) !== -1 && shapes.indexOf(goal.shape) !== -1) {
-                console.log("GOAL");
                 ball.body.position=[0,0];
                 ball.body.velocity=[0,0];
+                game.dispatch({
+                    eventType: 'GOAL',
+                    team: goal.team
+                });
             }
         });
     })
