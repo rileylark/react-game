@@ -22,7 +22,8 @@ let state = {
   world: {
     players: [],
     level: {
-      walls: []
+      walls: [],
+      goals: [],
     }
   }
 };
@@ -93,6 +94,9 @@ exampleSocket.onmessage = (message) => {
 
     render(state);
   } else if (payload.messageType === 'initialSetup') {
+
+    console.log(payload.level);
+    
     state = {
       ...state,
       myPlayerId: payload.yourId,

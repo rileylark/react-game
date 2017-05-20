@@ -2,12 +2,26 @@ import p2 from 'p2';
 
 const levelDef = {
     walls: [
-        { width: 102, height: 10, position: [0, -100] },
-        { width: 102, height: 10, position: [0, 100] },
-        { width: 10, height: 202, position: [-50, 0] },
-        { width: 10, height: 202, position: [50, 0] },
-        { width: 5, height: 30, position: [-25, 0] },
-        { width: 5, height: 30, position: [25, 0] },
+        { width: 102, height: 2, position: [0, -100] },
+        { width: 102, height: 2, position: [0, 100] },
+        { width: 2, height: 202, position: [-50, 0] },
+        { width: 2, height: 202, position: [50, 0] },
+        { width: 30, height: 2, position: [0, -25] },
+        { width: 30, height: 2, position: [0, 25] },
+
+        // top goal:
+        { width: 34, height: 2, position: [0, 86]},
+        { width: 2, height: 14, position: [16, 80]},
+        { width: 2, height: 14, position: [-16, 80]},
+
+        // bottom goal:
+        { width: 34, height: 2, position: [0, -86]},
+        { width: 2, height: 14, position: [16, -80]},
+        { width: 2, height: 14, position: [-16, -80]},
+    ], 
+    goals: [
+        { width: 30, height: 10, position: [0, 80], team: 'blue' },
+        { width: 30, height: 10, position: [0, -80], team: 'red' },
     ]
 };
 
@@ -29,13 +43,24 @@ const walls = levelDef.walls.map((wallDef) => {
 
 walls.forEach((wall) => { world.addBody(wall.body) });
 
+const goals = levelDef.goals.map((goalDef) => {
+    const shape = new p2.Box({ width: goalDef.width, height: goalDef.height, sensor: true });
+    const body = new p2.Body({ mass: 0, position: goalDef.position });
+    body.addShape(shape);
+
+    return { shape, body, team: goalDef.team };
+});
+
+goals.forEach((goal) => { world.addBody(goal.body) });
+
 const currentPlayers = {}; // map from player ID to player
 
 function makePlayer(playerId ) {
-    const shape = new p2.Circle({ radius: 5, material: steelMaterial });
+    const shape = new p2.Circle({ radius: 3, material: steelMaterial });
     var body = new p2.Body({
         mass: 5,
-        position: [10, 10]
+        position: [10, 10],
+        damping: 0.7
     });
 
     body.addShape(shape);
@@ -47,6 +72,7 @@ function makeBall() {
     var body = new p2.Body({
         mass: 1,
         position: [0, 0],
+        damping: 0.5,
     });
 
     body.addShape(shape);
@@ -98,6 +124,16 @@ function renderWall(wall) {
     }
 }
 
+function renderGoal(goal) {
+    return {
+        x: goal.body.position[0],
+        y: goal.body.position[1],
+        width: goal.shape.width,
+        height: goal.shape.height,
+        team: goal.team,
+    };
+}
+
 export function addPlayer(playerId) {
     const player = makePlayer(playerId);
     currentPlayers[playerId] = player;
@@ -129,7 +165,8 @@ export function renderMovingThings() {
 
 export function renderLevel() {
     return {
-        walls: walls.map(renderWall)
+        walls: walls.map(renderWall),
+        goals: goals.map(renderGoal),
     };
 }
 
@@ -160,6 +197,19 @@ world.on('postStep', () => {
         const player = currentPlayers[playerId];
         applyControls(player.body, player.controls);
     });
+});
+
+world.on('beginContact', ({shapeA, shapeB}) => {
+    const shapes = [shapeA, shapeB];
+    [gameBall].forEach((ball) => {
+        goals.forEach((goal) => {
+            if (shapes.indexOf(ball.shape) !== -1 && shapes.indexOf(goal.shape) !== -1) {
+                console.log("GOAL");
+                ball.body.position=[0,0];
+                ball.body.velocity=[0,0];
+            }
+        });
+    })
 });
 
 export function mergeNewControls(playerId, newControls) {

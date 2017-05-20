@@ -11,6 +11,7 @@ export default function Board({ world, camera }) {
         <g transform={`translate(${xOffset} ${yOffset}) scale(1, -1)`}>
 
           {world.level.walls.map(drawWall)}
+          {world.level.goals.map(drawGoal)}
           {world.players.map(drawShip)}
           {world.balls.map(drawBall)}
         </g>
@@ -22,7 +23,7 @@ export default function Board({ world, camera }) {
 function drawBall(ball, index) {
   return (
     <g transform={`translate(${ball.x} ${ball.y}) rotate(${ball.angle / Math.PI * 180})`} key={index}>
-      <circle cx="0" cy="0" r="1" stroke="black" strokeWidth="0.5" fill="yellow" />
+      <circle cx="0" cy="0" r="2" stroke="black" strokeWidth="0.5" fill="yellow" />
     </g>
   );
 }
@@ -30,8 +31,8 @@ function drawBall(ball, index) {
 function drawShip(ship) {
   return (
     <g transform={`translate(${ship.x} ${ship.y}) rotate(${ship.angle / Math.PI * 180})`} key={ship.playerId}>
-      <circle cx="0" cy="0" r="5" stroke="black" strokeWidth="0.5" fill="yellow" />
-      <line x1="0" y1="0" x2="0" y2="10" stroke="black" />
+      <circle cx="0" cy="0" r="3" stroke="black" strokeWidth="0.5" fill="yellow" />
+      <line x1="0" y1="0" x2="0" y2="4" stroke="black" />
     </g>
   );
 }
@@ -45,5 +46,15 @@ function drawWall(wall, index) {
   return <g transform={`translate(${topLeft.x} ${topLeft.y})`} key={index}>
     <rect width={wall.width} height={wall.height} />
   </g>;
+}
 
+function drawGoal(goal, index) {
+  const topLeft = {
+    x: goal.x - goal.width / 2,
+    y: goal.y - goal.height / 2
+  }
+
+  return <g transform={`translate(${topLeft.x} ${topLeft.y})`} key={index}>
+    <rect width={goal.width} height={goal.height} fill={goal.team} />
+  </g>;
 }
