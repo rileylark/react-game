@@ -132,7 +132,4 @@ export function mergeNewControls(newControls) {
         ...currentControls,
         ...newControls,
     };
-
-    console.log("new controls");
-    console.log(currentControls);
 }

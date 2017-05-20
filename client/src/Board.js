@@ -1,31 +1,26 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-function adjustX(x) {
-  return 150 + x * 3;
-}
-
-function adjustY(y) {
-  return 300 - (150 + y * 3);
-}
-
-class Board extends Component {
-  render() {
-    if (!this.props.world) {
-      return <div>loading</div>;
-    } else {
-      return (
-        <svg height="300" width="300">
-          
-          <g transform={`translate(${adjustX(this.props.world.ball.x)} ${adjustY(this.props.world.ball.y)}) rotate(${-this.props.world.ball.angle / Math.PI * 180})`}>
-            <circle cx="0" cy="0" r="10" stroke="black" strokeWidth="3" fill="red" />
-            <line x1="0" y1="0" x2="0" y2="-20" stroke="black" />
+export default function Board({world}) {
+  if (!world) {
+    return <div>loading</div>;
+  } else {
+    return (
+      <svg style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 0 }} height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <g transform="translate(50, 50) scale(1, -1)">
+          <g transform={`translate(${world.ball.x} ${world.ball.y}) rotate(${world.ball.angle / Math.PI * 180})`}>
+            <Ship />
           </g>
-          
-        </svg>
-      );
-    }
-
+        </g>
+      </svg>
+    );
   }
 }
 
-export default Board;
+function Ship() {
+  return (
+    <g>
+      <circle cx="0" cy="0" r="5" stroke="black" strokeWidth="0.5" fill="yellow" />
+      <line x1="0" y1="0" x2="0" y2="10" stroke="black" />
+    </g>
+  );
+}
