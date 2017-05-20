@@ -42,6 +42,20 @@ function makePlayer(playerId ) {
     return { shape, body, id: playerId, controls: {} };
 }
 
+function makeBall() {
+    const shape = new p2.Circle({ radius: 2, material: steelMaterial });
+    var body = new p2.Body({
+        mass: 1,
+        position: [0, 0],
+    });
+
+    body.addShape(shape);
+    return { shape, body };
+}
+
+const gameBall = makeBall();
+world.addBody(gameBall.body);
+
 // Create contact material between the two materials.
 // The ContactMaterial defines what happens when the two materials meet.
 // In this case, we use some restitution.
@@ -96,11 +110,21 @@ export function removePlayer(playerId) {
     delete currentPlayers[playerId];
 }
 
-export function renderPlayers() {
-    return Object.keys(currentPlayers).map((playerId) => {
+export function renderMovingThings() {
+    const players = Object.keys(currentPlayers).map((playerId) => {
         const player = currentPlayers[playerId];
-        return renderBody(player.body);
+        return {
+            ...renderBody(player.body),
+            playerId,
+        };
     });
+
+    const balls = [renderBody(gameBall.body)];
+
+    return {
+        players,
+        balls
+    };
 }
 
 export function renderLevel() {

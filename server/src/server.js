@@ -1,5 +1,5 @@
 import { Server } from 'uws';
-import { animate, addPlayer, removePlayer, renderPlayers, renderLevel, mergeNewControls } from './game';
+import { animate, addPlayer, removePlayer, renderMovingThings, renderLevel, mergeNewControls } from './game';
 
 const wss = new Server({ port: 3001 });
  
@@ -49,7 +49,7 @@ setInterval(() => animate(Date.now()), 1000/30);
 setInterval(() => {
     const message = JSON.stringify({
         messageType: 'renderedWorld',
-        players: renderPlayers()
+        ...renderMovingThings()
     });
 
     connections.forEach((connection) => {

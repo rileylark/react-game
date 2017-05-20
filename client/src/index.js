@@ -71,7 +71,8 @@ exampleSocket.onmessage = (message) => {
       ...state,
       world: {
         ...state.world,
-        players: payload.players
+        players: payload.players,
+        balls: payload.balls,
       }
     };
 
