@@ -2,10 +2,10 @@ import p2 from 'p2';
 
 const levelDef = {
     walls: [
-        { width: 102, height: 10, position: [0, -50] },
-        { width: 102, height: 10, position: [0, 50] },
-        { width: 10, height: 102, position: [-50, 0] },
-        { width: 10, height: 102, position: [50, 0] },
+        { width: 102, height: 10, position: [0, -100] },
+        { width: 102, height: 10, position: [0, 100] },
+        { width: 10, height: 202, position: [-50, 0] },
+        { width: 10, height: 202, position: [50, 0] },
         { width: 5, height: 30, position: [-25, 0] },
         { width: 5, height: 30, position: [25, 0] },
     ]

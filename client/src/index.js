@@ -10,8 +10,16 @@ function render(state) {
   );
 }
 
+const cameraSmoothing = {
+  player: 0.2,
+  camera: 0.8,
+}
 
 let state = {
+  camera: {
+    x: 0,
+    y: 0,
+  },
   world: {
     players: [],
     level: {
@@ -47,7 +55,7 @@ document.addEventListener('keydown', (e) => {
       controls: {
         [controlDown]: true
       }
-    })); 
+    }));
   }
 });
 
@@ -59,16 +67,25 @@ document.addEventListener('keyup', (e) => {
       controls: {
         [controlUp]: false
       }
-    })); 
+    }));
   }
 });
 
 exampleSocket.onmessage = (message) => {
   const payload = JSON.parse(message.data);
   if (payload.messageType === 'renderedWorld') {
+    const localPlayer = payload.players.find((player) => player.playerId === state.myPlayerId);
+    console.log("Got local player", state.myPlayerId, localPlayer);
+    const cameraPosition = localPlayer
+      ? {
+        x: cameraSmoothing.player * localPlayer.x + cameraSmoothing.camera * state.camera.x,
+        y: cameraSmoothing.player * localPlayer.y + cameraSmoothing.camera  * state.camera.y,
+      }
+      : { x: 0, y: 0 };
 
     state = {
       ...state,
+      camera: cameraPosition,
       world: {
         ...state.world,
         players: payload.players,
@@ -80,10 +97,11 @@ exampleSocket.onmessage = (message) => {
   } else if (payload.messageType === 'initialSetup') {
     state = {
       ...state,
+      myPlayerId: payload.yourId,
       world: {
         ...state.world,
-        level: payload.level
+        level: payload.level,
       }
-    }
+    };
   }
 };

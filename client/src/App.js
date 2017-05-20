@@ -8,9 +8,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <Board world={this.props.wholeState.world} />
-
-        <DebugOutput completeState={this.props.wholeState} />
+        <Board world={this.props.wholeState.world} camera={this.props.wholeState.camera} />
       </div>
     );
   }

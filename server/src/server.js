@@ -1,6 +1,8 @@
 import { Server } from 'uws';
 import { animate, addPlayer, removePlayer, renderMovingThings, renderLevel, mergeNewControls } from './game';
 
+const framerate = 60;
+
 const wss = new Server({ port: 3001 });
  
 function onMessage(userId, messageJson) {
@@ -32,6 +34,7 @@ wss.on('connection', function(ws) {
     
     const initialMessage = JSON.stringify({
         messageType: 'initialSetup',
+        yourId: userId,
         level: renderLevel()
     });
 
@@ -44,7 +47,7 @@ wss.on('connection', function(ws) {
     ws.send(initialMessage);
 });
 
-setInterval(() => animate(Date.now()), 1000/30);
+setInterval(() => animate(Date.now()), 1000/framerate);
 
 setInterval(() => {
     const message = JSON.stringify({
@@ -55,4 +58,5 @@ setInterval(() => {
     connections.forEach((connection) => {
         connection.ws.send(message);
     });
-}, 1000/30);
+}, 1000/framerate
+);
