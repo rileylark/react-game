@@ -1,11 +1,10 @@
-import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import './index.css';
 
 function render(state) {
   ReactDOM.render(
-    <App wholeState={state} />,
+    App(state),
     document.getElementById('root')
   );
 }
@@ -75,7 +74,6 @@ exampleSocket.onmessage = (message) => {
   const payload = JSON.parse(message.data);
   if (payload.messageType === 'renderedWorld') {
     const localPlayer = payload.players.find((player) => player.playerId === state.myPlayerId);
-    console.log("Got local player", state.myPlayerId, localPlayer);
     const cameraPosition = localPlayer
       ? {
         x: cameraSmoothing.player * localPlayer.x + cameraSmoothing.camera * state.camera.x,
