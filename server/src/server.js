@@ -1,13 +1,13 @@
 import { Server } from 'uws';
-import { animate, renderPlayers, renderLevel, mergeNewControls } from './game';
+import { animate, addPlayer, removePlayer, renderPlayers, renderLevel, mergeNewControls } from './game';
 
 const wss = new Server({ port: 3001 });
  
-function onMessage(messageJson) {
+function onMessage(userId, messageJson) {
     try {
         const message = JSON.parse(messageJson);
         if (message.messageType === 'controlChange') {
-            mergeNewControls(message.controls);
+            mergeNewControls(userId, message.controls);
         }
     } catch (e) {
 
@@ -17,12 +17,28 @@ function onMessage(messageJson) {
 const connections = [];
 
 wss.on('connection', function(ws) {
-    connections.push(ws);
-    ws.on('message', onMessage);
+    const userId = '' + Math.random();
+
+    const connection = {
+        userId,
+        ws
+    };
+
+    connections.push(connection);
+
+    addPlayer(userId);
+
+    ws.on('message', (messageJson) => onMessage(userId, messageJson));
     
     const initialMessage = JSON.stringify({
         messageType: 'initialSetup',
         level: renderLevel()
+    });
+
+    ws.on('close', () => {
+        removePlayer(userId);
+        const indexOfConnection = connections.indexOf(connection);
+        connections.splice(indexOfConnection, 1);
     });
 
     ws.send(initialMessage);
@@ -37,6 +53,6 @@ setInterval(() => {
     });
 
     connections.forEach((connection) => {
-        connection.send(message);
+        connection.ws.send(message);
     });
 }, 1000/30);

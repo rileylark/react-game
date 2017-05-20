@@ -18,24 +18,7 @@ var world = new p2.World({
     gravity: [0, 0]
 });
 
-
-// Create an empty dynamic body
-var circleBody = new p2.Body({
-    mass: 5,
-    position: [10, 10]
-});
-
 const steelMaterial = new p2.Material();
-
-// Add a circle shape to the body
-var circleShape = new p2.Circle({ radius: 5, material: steelMaterial });
-circleBody.addShape(circleShape);
-
-// ...and add the body to the world.
-// If we don't add it to the world, it won't be simulated.
-world.addBody(circleBody);
-
-// Create an infinite ground plane body
 
 const walls = levelDef.walls.map((wallDef) => {
     const shape = new p2.Box({ width: wallDef.width, height: wallDef.height, material: steelMaterial });
@@ -45,6 +28,19 @@ const walls = levelDef.walls.map((wallDef) => {
 });
 
 walls.forEach((wall) => { world.addBody(wall.body) });
+
+const currentPlayers = {}; // map from player ID to player
+
+function makePlayer(playerId ) {
+    const shape = new p2.Circle({ radius: 5, material: steelMaterial });
+    var body = new p2.Body({
+        mass: 5,
+        position: [10, 10]
+    });
+
+    body.addShape(shape);
+    return { shape, body, id: playerId, controls: {} };
+}
 
 // Create contact material between the two materials.
 // The ContactMaterial defines what happens when the two materials meet.
@@ -62,17 +58,12 @@ var lastTime;
 
 // Animation loop
 export function animate(time) {
-    // console.log("Animating !");
-    // console.log(circleBody.interpolatedPosition);
-
     // Compute elapsed time since last render frame
     var deltaTime = lastTime ? (time - lastTime) / 1000 : 0;
 
     // Move bodies forward in time
     world.step(fixedTimeStep, deltaTime, maxSubSteps);
 
-    // Render the circle at the current interpolated position
-    // renderCircleAtPosition(circleBody.interpolatedPosition);
     lastTime = time;
 }
 
@@ -92,10 +83,24 @@ function renderWall(wall) {
         height: wall.shape.height,
     }
 }
+
+export function addPlayer(playerId) {
+    const player = makePlayer(playerId);
+    currentPlayers[playerId] = player;
+    world.addBody(player.body);
+}
+
+export function removePlayer(playerId) {
+    const player = currentPlayers[playerId];
+    world.removeBody(player.body);
+    delete currentPlayers[playerId];
+}
+
 export function renderPlayers() {
-    return {
-        ball: renderBody(circleBody)
-    }
+    return Object.keys(currentPlayers).map((playerId) => {
+        const player = currentPlayers[playerId];
+        return renderBody(player.body);
+    });
 }
 
 export function renderLevel() {
@@ -104,34 +109,39 @@ export function renderLevel() {
     };
 }
 
-let currentControls = {
-    up: false
-};
 
 const boosterForce = 200;
 
+function applyControls(body, controls) {
+    if (controls.up) {
+        body.applyForceLocal([0, boosterForce]);
+    }
+
+    body.angularVelocity = 0;
+    if (controls.left) {
+        body.angularVelocity += 4;
+    }
+
+    if (controls.right) {
+        body.angularVelocity -= 4;
+    }
+
+    if (controls.down) {
+        body.applyForceLocal([0, -boosterForce]);
+    }
+}
+
 world.on('postStep', () => {
-    if (currentControls.up) {
-        circleBody.applyForceLocal([0, boosterForce]);
-    }
-
-    circleBody.angularVelocity = 0;
-    if (currentControls.left) {
-        circleBody.angularVelocity += 4;
-    }
-
-    if (currentControls.right) {
-        circleBody.angularVelocity -= 4;
-    }
-
-    if (currentControls.down) {
-        circleBody.applyForceLocal([0, -boosterForce]);
-    }
+    Object.keys(currentPlayers).forEach((playerId) => {
+        const player = currentPlayers[playerId];
+        applyControls(player.body, player.controls);
+    });
 });
 
-export function mergeNewControls(newControls) {
-    currentControls = {
-        ...currentControls,
+export function mergeNewControls(playerId, newControls) {
+    const player = currentPlayers[playerId];
+    player.controls = {
+        ...player.controls,
         ...newControls,
     };
 }

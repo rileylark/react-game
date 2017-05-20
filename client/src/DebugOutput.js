@@ -5,9 +5,9 @@ class DebugOutput extends Component {
     return (
       <div>
         <h2>Debug output</h2>
-        <code>
-        {JSON.stringify(this.props.completeState)}
-        </code>
+        <pre>
+        {JSON.stringify(this.props.completeState, null, 4)}
+        </pre>
       </div>
     );
   }

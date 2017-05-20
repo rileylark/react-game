@@ -13,7 +13,7 @@ function render(state) {
 
 let state = {
   world: {
-    players: {},
+    players: [],
     level: {
       walls: []
     }
@@ -74,8 +74,6 @@ exampleSocket.onmessage = (message) => {
         players: payload.players
       }
     };
-
-    console.log(state);
 
     render(state);
   } else if (payload.messageType === 'initialSetup') {

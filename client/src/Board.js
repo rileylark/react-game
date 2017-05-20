@@ -1,15 +1,16 @@
 import React from 'react';
 
 export default function Board({ world }) {
-  if (!world.players.ball) {
-    return <div>loading</div>;
+  if (!world.players) {
+    return <div>{JSON.stringify(world.players)}</div>;
   } else {
     return (
       <svg style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 0 }} height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
         <g transform="translate(50, 50) scale(1, -1)">
 
-          {world.level.walls.map(drawWall)}
-          {drawShip(world.players.ball)}
+          { world.level.walls.map(drawWall)}
+          { world.players.map(drawShip) }
+          
         </g>
       </svg>
     );
