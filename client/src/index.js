@@ -21,25 +21,34 @@ exampleSocket.onopen = function (event) {
   }, 5000);
 };
 
+const controlMap = {
+  'ArrowUp': 'up',
+  'ArrowDown': 'down',
+  'ArrowLeft': 'left',
+  'ArrowRight': 'right',
+};
+
 document.addEventListener('keydown', (e) => {
-  if (e.code === 'ArrowUp') {
+  const controlDown = controlMap[e.code];
+  if (controlDown) {
     exampleSocket.send(JSON.stringify({
       messageType: 'controlChange',
       controls: {
-        up: true
+        [controlDown]: true
       }
-    }));
+    })); 
   }
 });
 
 document.addEventListener('keyup', (e) => {
-  if (e.code === 'ArrowUp') {
+  const controlUp = controlMap[e.code];
+  if (controlUp) {
     exampleSocket.send(JSON.stringify({
       messageType: 'controlChange',
       controls: {
-        up: false
+        [controlUp]: false
       }
-    }));
+    })); 
   }
 });
 
@@ -47,5 +56,7 @@ exampleSocket.onmessage = (message) => {
   const payload = JSON.parse(message.data);
   if (payload.messageType === 'renderedWorld') {
     render(payload.world);
+  } else if (payload.messageType === 'initialSetup') {
+    console.log("Got initial setup ", payload);
   }
 };
