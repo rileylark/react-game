@@ -37,7 +37,7 @@ let state = {
 render(state);
 
 
-const exampleSocket = new WebSocket("ws://localhost:3001");
+const exampleSocket = new WebSocket("ws://104.198.51.152:3001");
 exampleSocket.onopen = function (event) {
   setInterval(() => {
     exampleSocket.send(JSON.stringify({
