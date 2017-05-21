@@ -10,7 +10,7 @@
     "react": "^15.5.4",
     "react-dom": "^15.5.4"
   },
-  "homepage": "https://rileylark.github.io/react-game",
+  "homepage": "https://rileylark.github.io",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
