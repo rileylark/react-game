@@ -38,7 +38,15 @@ const levelDef = {
     }
 };
 
+const collisionBitNames = ['RED_PLAYER', 'BLUE_PLAYER', 'BALL', 'LEVEL'];
+const collisionBits = {};
+collisionBitNames.forEach((name, index) => {
+    collisionBits[name] = Math.pow(2, index);
+});
 
+function makeCollisionMask(collisionBitNames) {
+    return collisionBitNames.reduce((mask, name) => mask | collisionBits[name], 0);
+}
 
 // Create a physics world, where bodies and constraints live
 var world = new p2.World({
@@ -56,7 +64,14 @@ setInterval(() => {
 const steelMaterial = new p2.Material();
 
 const walls = levelDef.walls.map((wallDef) => {
-    const shape = new p2.Box({ width: wallDef.width, height: wallDef.height, material: steelMaterial });
+    const shape = new p2.Box({ 
+        width: wallDef.width, 
+        height: wallDef.height, 
+        material: steelMaterial, 
+        collisionGroup: collisionBits['LEVEL'],
+        collisionMask: makeCollisionMask(['BLUE_PLAYER', 'RED_PLAYER', 'BALL'])
+    });
+
     const body = new p2.Body({ mass: 0, position: wallDef.position });
     body.addShape(shape);
     return { shape, body };
@@ -65,7 +80,14 @@ const walls = levelDef.walls.map((wallDef) => {
 walls.forEach((wall) => { world.addBody(wall.body) });
 
 const goals = levelDef.goals.map((goalDef) => {
-    const shape = new p2.Box({ width: goalDef.width, height: goalDef.height, sensor: true });
+    const shape = new p2.Box({ 
+        width: goalDef.width, 
+        height: goalDef.height, 
+        sensor: true, 
+        collisionGroup: collisionBits['LEVEL'],
+        collisionMask: makeCollisionMask(['BLUE_PLAYER', 'RED_PLAYER', 'BALL'])
+    });
+
     const body = new p2.Body({ mass: 0, position: goalDef.position });
     body.addShape(shape);
 
@@ -100,6 +122,14 @@ function makePlayer(playerId ) {
 
     const shape = new p2.Circle({ radius: 3, material: steelMaterial });
     
+    if (team === 'blue') {
+        shape.collisionGroup = collisionBits['BLUE_PLAYER'];
+        shape.collisionMask = makeCollisionMask(['RED_PLAYER', 'BALL', 'LEVEL']);
+    } else if (team === 'red') {
+        shape.collisionGroup = collisionBits['RED_PLAYER'];
+        shape.collisionMask = makeCollisionMask(['BLUE_PLAYER', 'BALL', 'LEVEL']);
+    }
+
     var body = new p2.Body({
         mass: 5,
         position: spawnLocation,
@@ -112,7 +142,13 @@ function makePlayer(playerId ) {
 }
 
 function makeBall() {
-    const shape = new p2.Circle({ radius: 2, material: steelMaterial });
+    const shape = new p2.Circle({ 
+        radius: 2, 
+        material: steelMaterial, 
+        collisionGroup: collisionBits['BALL'],
+        collisionMask: makeCollisionMask(['BLUE_PLAYER', 'RED_PLAYER', 'LEVEL']),
+    });
+    
     var body = new p2.Body({
         mass: 1,
         position: [0, 0],
