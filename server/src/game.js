@@ -23,7 +23,19 @@ const levelDef = {
     goals: [
         { width: 30, height: 10, position: [0, 80], team: 'blue' },
         { width: 30, height: 10, position: [0, -80], team: 'red' },
-    ]
+    ],
+    spawnLocations: {
+        red: [
+            [-25, 25],
+            [25, 25],
+            [0, 50],
+        ],
+        blue: [
+            [-25, -25],
+            [25, -25],
+            [0, -50],
+        ]
+    }
 };
 
 
@@ -64,17 +76,39 @@ goals.forEach((goal) => { world.addBody(goal.body) });
 
 const currentPlayers = {}; // map from player ID to player
 
+function getTeamCounts() {
+    const [ redCount, blueCount ] = Object.keys(currentPlayers).reduce(([ redCount, blueCount ], playerId) => {
+        const team = currentPlayers[playerId].team;
+
+        if (team === 'red') {
+            return [ redCount + 1, blueCount ];
+        } else if (team === 'blue' ) {
+            return [ redCount, blueCount + 1 ];
+        }
+    }, [0, 0]);
+
+    return {
+        red: redCount, blue: blueCount
+    };
+    
+}
 
 function makePlayer(playerId ) {
+    const teamCounts = getTeamCounts();
+    const team = teamCounts.red > teamCounts.blue ? 'blue' : 'red';
+    const spawnLocation = levelDef.spawnLocations[team][teamCounts[team] % levelDef.spawnLocations[team].length];
+
     const shape = new p2.Circle({ radius: 3, material: steelMaterial });
+    
     var body = new p2.Body({
         mass: 5,
-        position: [10, 10],
-        damping: 0.7
+        position: spawnLocation,
+        damping: 0.7,
+        angle: team === 'red' ? Math.PI : 0,
     });
 
     body.addShape(shape);
-    return { shape, body, id: playerId, controls: {} };
+    return { shape, body, id: playerId, controls: {}, team: team };
 }
 
 function makeBall() {
@@ -161,6 +195,7 @@ export function renderMovingThings() {
         const player = currentPlayers[playerId];
         return {
             ...renderBody(player.body),
+            team: player.team,
             playerId,
         };
     });

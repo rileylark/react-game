@@ -1,5 +1,10 @@
 import React from 'react';
 
+const teamFills = {
+  red: 'red',
+  blue: 'lightblue',
+}
+
 export default function Board({ world, camera }) {
   if (!world.players || !world.balls) {
     return <div>{JSON.stringify(world.players)}</div>;
@@ -29,9 +34,10 @@ function drawBall(ball, index) {
 }
 
 function drawShip(ship) {
+
   return (
     <g transform={`translate(${ship.x} ${ship.y}) rotate(${ship.angle / Math.PI * 180})`} key={ship.playerId}>
-      <circle cx="0" cy="0" r="3" stroke="black" strokeWidth="0.5" fill="yellow" />
+      <circle cx="0" cy="0" r="3" stroke="black" strokeWidth="0.5" fill={teamFills[ship.team]} />
       <line x1="0" y1="0" x2="0" y2="4" stroke="black" />
     </g>
   );
@@ -55,6 +61,6 @@ function drawGoal(goal, index) {
   }
 
   return <g transform={`translate(${topLeft.x} ${topLeft.y})`} key={index}>
-    <rect width={goal.width} height={goal.height} fill={goal.team} />
+    <rect width={goal.width} height={goal.height} fill={teamFills[goal.team]} />
   </g>;
 }
