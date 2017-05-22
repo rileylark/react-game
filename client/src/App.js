@@ -3,16 +3,16 @@ import Board from './Board';
 
 import './App.css';
 
-function App({ world, camera, gameState }) {
+function App({ world, camera, gameState, localPlayer }) {
   return (
     <div className="App">
       {Board({ world, camera })}
-      {Scoreboard({ gameState })}
+      {Scoreboard({ gameState, localPlayer })}
     </div>
   );
 }
 
-function Scoreboard({ gameState }) {
+function Scoreboard({ gameState, localPlayer }) {
   if (gameState.mode === 'playing') {
 
 
@@ -30,6 +30,9 @@ function Scoreboard({ gameState }) {
           Red: {gameState.score.red}
         </h1>
         <p>Time left: {secondsLeft}</p>
+        <svg width="200" height="10">
+          <rect width={localPlayer.percentBoostLeft * 200 } height="10" fill="red" />
+        </svg>
       </div>
     );
   } else {

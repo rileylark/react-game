@@ -3,37 +3,37 @@ import { createGame } from './gameRules';
 
 const levelDef = {
     walls: [
-        { width: 102, height: 2, position: [0, -100] },
-        { width: 102, height: 2, position: [0, 100] },
-        { width: 2, height: 202, position: [-50, 0] },
-        { width: 2, height: 202, position: [50, 0] },
-        { width: 30, height: 2, position: [0, -25] },
-        { width: 30, height: 2, position: [0, 25] },
+        { width: 204, height: 2, position: [0, -200] },
+        { width: 204, height: 2, position: [0, 200] },
+        { width: 2, height: 404, position: [-100, 0] },
+        { width: 2, height: 404, position: [100, 0] },
+        { width: 60, height: 2, position: [0, -50] },
+        { width: 60, height: 2, position: [0, 50] },
 
         // top goal:
-        { width: 34, height: 2, position: [0, 86]},
-        { width: 2, height: 14, position: [16, 80]},
-        { width: 2, height: 14, position: [-16, 80]},
+        { width: 64, height: 2, position: [0, 171]},
+        { width: 2, height: 24, position: [31, 160]},
+        { width: 2, height: 24, position: [-31, 160]},
 
         // bottom goal:
-        { width: 34, height: 2, position: [0, -86]},
-        { width: 2, height: 14, position: [16, -80]},
-        { width: 2, height: 14, position: [-16, -80]},
+        { width: 64, height: 2, position: [0, -171]},
+        { width: 2, height: 24, position: [31, -160]},
+        { width: 2, height: 24, position: [-31, -160]},
     ], 
     goals: [
-        { width: 30, height: 10, position: [0, 80], team: 'blue' },
-        { width: 30, height: 10, position: [0, -80], team: 'red' },
+        { width: 60, height: 20, position: [0, 160], team: 'blue' },
+        { width: 60, height: 20, position: [0, -160], team: 'red' },
     ],
     spawnLocations: {
         red: [
-            [-25, 25],
-            [25, 25],
-            [0, 50],
+            [-50, 50],
+            [50, 50],
+            [0, 100],
         ],
         blue: [
-            [-25, -25],
-            [25, -25],
-            [0, -50],
+            [-50, -50],
+            [50, -50],
+            [0, -100],
         ]
     }
 };
@@ -43,6 +43,8 @@ const collisionBits = {};
 collisionBitNames.forEach((name, index) => {
     collisionBits[name] = Math.pow(2, index);
 });
+
+const maxSecondsOfBoost = 2;
 
 function makeCollisionMask(collisionBitNames) {
     return collisionBitNames.reduce((mask, name) => mask | collisionBits[name], 0);
@@ -138,7 +140,14 @@ function makePlayer(playerId ) {
     });
 
     body.addShape(shape);
-    return { shape, body, id: playerId, controls: {}, team: team };
+    return { 
+        shape, 
+        body, 
+        id: playerId, 
+        controls: {}, 
+        team: team,
+        secondsOfBoostLeft: maxSecondsOfBoost,
+    };
 }
 
 function makeBall() {
@@ -183,6 +192,22 @@ export function animate(time) {
 
     // Move bodies forward in time
     world.step(fixedTimeStep, deltaTime, maxSubSteps);
+
+    // reduce boost
+    Object.keys(currentPlayers).forEach((playerId) => {
+        const player = currentPlayers[playerId];
+        if (player.controls.boost && player.secondsOfBoostLeft > 0) {
+            player.secondsOfBoostLeft -= deltaTime;
+        }
+    });
+
+    // increase boost
+    Object.keys(currentPlayers).forEach((playerId) => {
+        const player = currentPlayers[playerId];
+        if (!player.controls.boost) {
+            player.secondsOfBoostLeft = Math.min(player.secondsOfBoostLeft + deltaTime / 6, maxSecondsOfBoost);
+        }
+    });
 
     lastTime = time;
 }
@@ -233,6 +258,7 @@ export function renderMovingThings() {
             ...renderBody(player.body),
             team: player.team,
             playerId,
+            percentBoostLeft: player.secondsOfBoostLeft / maxSecondsOfBoost,
         };
     });
 
@@ -257,7 +283,9 @@ export function renderGameState() {
 
 const boosterForce = 200;
 
-function applyControls(body, controls) {
+function applyControls(player) {
+    const {body, controls} = player;
+
     if (controls.up) {
         body.applyForceLocal([0, boosterForce]);
     }
@@ -274,12 +302,16 @@ function applyControls(body, controls) {
     if (controls.down) {
         body.applyForceLocal([0, -boosterForce]);
     }
+
+    if (controls.boost && player.secondsOfBoostLeft > 0) {
+        body.applyForceLocal([0, boosterForce]);
+    }
 }
 
 world.on('postStep', () => {
     Object.keys(currentPlayers).forEach((playerId) => {
         const player = currentPlayers[playerId];
-        applyControls(player.body, player.controls);
+        applyControls(player);
     });
 });
 

@@ -31,13 +31,15 @@ let state = {
       blue: 0,
       red: 0,
     }
-  }
+  },
+  localPlayer: {}
 };
 
 render(state);
 
 
-const exampleSocket = new WebSocket("ws://104.198.51.152:3001");
+// const exampleSocket = new WebSocket("ws://104.198.51.152:3001");
+const exampleSocket = new WebSocket('ws://localhost:3001');
 exampleSocket.onopen = function (event) {
   setInterval(() => {
     exampleSocket.send(JSON.stringify({
@@ -51,6 +53,7 @@ const controlMap = {
   'ArrowDown': 'down',
   'ArrowLeft': 'left',
   'ArrowRight': 'right',
+  'Space': 'boost',
 };
 
 document.addEventListener('keydown', (e) => {
@@ -90,6 +93,7 @@ exampleSocket.onmessage = (message) => {
 
     state = {
       ...state,
+      localPlayer,
       camera: cameraPosition,
       world: {
         ...state.world,
