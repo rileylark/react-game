@@ -1,7 +1,9 @@
 import { Server } from 'uws';
-import { animate, addPlayer, removePlayer, renderMovingThings, renderGameState, renderLevel, mergeNewControls } from './game';
+import { makeInstance } from './game';
+import hockeyMap from './hockeyMap';
 
-const framerate = 60;
+const physicsFramerate = 30; // Hz
+const networkUpdateFramerate = 5; // Hz
 
 const wss = new Server({ port: 3001 });
  
@@ -9,14 +11,16 @@ function onMessage(userId, messageJson) {
     try {
         const message = JSON.parse(messageJson);
         if (message.messageType === 'controlChange') {
-            mergeNewControls(userId, message.controls);
+            gameInstance.mergeNewControls(userId, message.controls);
         }
     } catch (e) {
-
+        console.error("ERROR");
+        console.error(e);
     }
 }
  
 const connections = [];
+const gameInstance = makeInstance(hockeyMap);
 
 wss.on('connection', function(ws) {
     const userId = '' + Math.random();
@@ -28,18 +32,18 @@ wss.on('connection', function(ws) {
 
     connections.push(connection);
 
-    addPlayer(userId);
+    gameInstance.addPlayer(userId);
 
     ws.on('message', (messageJson) => onMessage(userId, messageJson));
     
     const initialMessage = JSON.stringify({
         messageType: 'initialSetup',
         yourId: userId,
-        level: renderLevel()
+        // level: renderLevel()
     });
 
     ws.on('close', () => {
-        removePlayer(userId);
+        gameInstance.removePlayer(userId);
         const indexOfConnection = connections.indexOf(connection);
         connections.splice(indexOfConnection, 1);
     });
@@ -47,12 +51,12 @@ wss.on('connection', function(ws) {
     ws.send(initialMessage);
 });
 
-setInterval(() => animate(Date.now()), 1000/framerate);
+setInterval(() => gameInstance.animate(Date.now()), 1000/physicsFramerate);
 
 setInterval(() => {
     const message = JSON.stringify({
         messageType: 'gameState',
-        gameState: renderGameState()
+        gameState: gameInstance.renderGameState()
     });
 
     connections.forEach((connection) => {
@@ -63,11 +67,11 @@ setInterval(() => {
 setInterval(() => {
     const message = JSON.stringify({
         messageType: 'renderedWorld',
-        ...renderMovingThings()
+        ...gameInstance.renderMovingThings()
     });
 
     connections.forEach((connection) => {
         connection.ws.send(message);
     });
-}, 1000/framerate
+}, 1000/networkUpdateFramerate
 );
