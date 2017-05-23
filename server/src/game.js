@@ -3,10 +3,10 @@ import { createGame } from './gameRules';
 
 const levelDef = {
     walls: [
-        { width: 204, height: 2, position: [0, -200] },
-        { width: 204, height: 2, position: [0, 200] },
-        { width: 2, height: 404, position: [-100, 0] },
-        { width: 2, height: 404, position: [100, 0] },
+        { width: 202, height: 2, position: [0, -200] },
+        { width: 202, height: 2, position: [0, 200] },
+        { width: 2, height: 402, position: [-100, 0] },
+        { width: 2, height: 402, position: [100, 0] },
         { width: 60, height: 2, position: [0, -50] },
         { width: 60, height: 2, position: [0, 50] },
 
@@ -44,7 +44,7 @@ collisionBitNames.forEach((name, index) => {
     collisionBits[name] = Math.pow(2, index);
 });
 
-const maxSecondsOfBoost = 2;
+const maxSecondsOfBoost = 1;
 
 function makeCollisionMask(collisionBitNames) {
     return collisionBitNames.reduce((mask, name) => mask | collisionBits[name], 0);

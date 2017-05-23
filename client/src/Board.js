@@ -5,20 +5,31 @@ const teamFills = {
   blue: 'lightblue',
 }
 
+function drawWorld(world) {
+  return [
+    world.level.walls.map(drawWall),
+    world.level.goals.map(drawGoal),
+    world.players.map(drawShip),
+    world.balls.map(drawBall),
+  ];
+}
+
 export default function Board({ world, camera }) {
   if (!world.players || !world.balls) {
     return <div>{JSON.stringify(world.players)}</div>;
   } else {
     const xOffset = 50 - camera.x;
     const yOffset = 50 + camera.y;
+
+    const drawnWorld = drawWorld(world);
     return (
       <svg style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 0 }} height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
         <g transform={`translate(${xOffset} ${yOffset}) scale(1, -1)`}>
-
-          {world.level.walls.map(drawWall)}
-          {world.level.goals.map(drawGoal)}
-          {world.players.map(drawShip)}
-          {world.balls.map(drawBall)}
+          {drawnWorld}
+        </g>
+        <g transform={`translate(90, 20) scale(0.1, -0.1)`} opacity="0.75">
+          <rect width="200" height="400" x="-100" y="-200" fill="white" />
+          {drawnWorld}
         </g>
       </svg>
     );
