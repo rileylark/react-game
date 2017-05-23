@@ -48,12 +48,44 @@ function drawShip(ship) {
   return (
     <g transform={`translate(${ship.x} ${ship.y}) rotate(${ship.angle / Math.PI * 180})`} key={ship.playerId}>
         <circle cx="0" cy="0" r="3" stroke="black" strokeWidth="0.5" fill={teamFills[ship.team]} />
+        
+        {drawBoosters(ship)}
         <g transform="rotate(90) scale(-1, 1)">
-        <circle cx="0" cy="0" r="2.5" stroke="green" strokeWidth="1" fill="none" strokeDasharray="15.70795" strokeDashoffset={(1-ship.percentBoostLeft) * 15.70795}/>
+          <circle cx="0" cy="0" r="2.5" stroke="green" strokeWidth="1" fill="none" strokeDasharray="15.70795" strokeDashoffset={(1-ship.percentBoostLeft) * 15.70795}/>
         </g>
         <line x1="0" y1="0" x2="0" y2="4" stroke="black" />
     </g>
   );
+}
+
+function drawBoosters(ship) {
+  const flames = [];
+
+  let forwardBoost = 0;
+  if (ship.controls.boost && ship.percentBoostLeft > 0.01) {
+    forwardBoost++;
+  }
+
+  if (ship.controls.up) {
+    forwardBoost++;
+  }
+
+  if (forwardBoost >= 2) {
+    flames.push(<polygon points="-3,-2 -1,-2 -2,-5" x="-20" fill="orange"/>);
+    flames.push(<polygon points="3,-2 1,-2 2,-5" x="-20" fill="orange"/>);
+  }
+
+  if (forwardBoost >= 1) {
+    flames.push(<polygon points="-3,-2 -1,-2 -2,-3" x="-20" fill="red"/>);
+    flames.push(<polygon points="3,-2 1,-2 2,-3" x="-20" fill="red"/>);
+  }
+
+  if (ship.controls.down) {
+    flames.push(<polygon points="-3,2 -1,2 -2,3" x="-20" fill="red"/>);
+    flames.push(<polygon points="3,2 1,2 2,3" x="-20" fill="red"/>);
+  }
+
+  return flames;
 }
 
 function drawWall(wall, index) {

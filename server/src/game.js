@@ -259,6 +259,7 @@ export function renderMovingThings() {
             team: player.team,
             playerId,
             percentBoostLeft: player.secondsOfBoostLeft / maxSecondsOfBoost,
+            controls: player.controls,
         };
     });
 
