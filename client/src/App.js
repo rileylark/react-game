@@ -23,16 +23,22 @@ function Scoreboard({ gameState, localPlayer }) {
 
     return (
       <div className="scoreboard">
-        <h1>
-          Blue: {gameState.score.blue}
-        </h1>
-        <h1>
-          Red: {gameState.score.red}
-        </h1>
-        <p>Time left: {secondsLeft}</p>
-        <svg width="200" height="10">
-          <rect width={localPlayer.percentBoostLeft * 200 } height="10" fill="red" />
-        </svg>
+        <table>
+          <tr>
+            <th>Blue</th>
+            <th>Red</th>
+            <th>Time Left</th>
+          </tr>
+          <tr>
+            <td>
+              {gameState.score.blue}
+            </td>
+            <td>
+              {gameState.score.red}
+            </td>
+            <td> {secondsLeft}</td>
+          </tr>
+        </table>
       </div>
     );
   } else {

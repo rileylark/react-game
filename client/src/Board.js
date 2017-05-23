@@ -45,11 +45,13 @@ function drawBall(ball, index) {
 }
 
 function drawShip(ship) {
-
   return (
     <g transform={`translate(${ship.x} ${ship.y}) rotate(${ship.angle / Math.PI * 180})`} key={ship.playerId}>
-      <circle cx="0" cy="0" r="3" stroke="black" strokeWidth="0.5" fill={teamFills[ship.team]} />
-      <line x1="0" y1="0" x2="0" y2="4" stroke="black" />
+        <circle cx="0" cy="0" r="3" stroke="black" strokeWidth="0.5" fill={teamFills[ship.team]} />
+        <g transform="rotate(90) scale(-1, 1)">
+        <circle cx="0" cy="0" r="2.5" stroke="green" strokeWidth="1" fill="none" strokeDasharray="15.70795" strokeDashoffset={(1-ship.percentBoostLeft) * 15.70795}/>
+        </g>
+        <line x1="0" y1="0" x2="0" y2="4" stroke="black" />
     </g>
   );
 }
