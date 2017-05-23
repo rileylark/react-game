@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "babel-watch src/server.js"
+    "start": "babel-watch src/server.js",
+    "flow": "flow"
   },
   "keywords": [],
   "author": "",
@@ -18,5 +19,8 @@
     "babel-watch": "^2.0.6",
     "p2": "^0.7.1",
     "uws": "^0.14.5"
+  },
+  "devDependencies": {
+    "flow-bin": "^0.46.0"
   }
 }

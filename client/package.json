@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
+    "flow-bin": "^0.46.0",
     "gh-pages": "^1.0.0",
     "react-scripts": "0.9.5"
   },
@@ -17,6 +18,7 @@
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "flow": "flow"
   }
 }
