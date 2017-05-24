@@ -10,13 +10,13 @@ function drawWorld(world) {
     world.level.walls.map(drawWall),
     world.level.goals.map(drawGoal),
     world.players.map(drawShip),
-    world.balls.map(drawBall),
+    [world.ball].map(drawBall),
   ];
 }
 
 export default function Board({ world, camera }) {
-  if (!world.players || !world.balls) {
-    return <div>{JSON.stringify(world.players)}</div>;
+  if (!world.players || !world.ball) {
+    return <div>{JSON.stringify(world)}</div>;
   } else {
     const xOffset = 50 - camera.x;
     const yOffset = 50 + camera.y;
@@ -38,7 +38,7 @@ export default function Board({ world, camera }) {
 
 function drawBall(ball, index) {
   return (
-    <g transform={`translate(${ball.x} ${ball.y}) rotate(${ball.angle / Math.PI * 180})`} key={index}>
+    <g transform={`translate(${ball.body.position[0]} ${ball.body.position[1]}) rotate(${ball.body.angle / Math.PI * 180})`} key={index}>
       <circle cx="0" cy="0" r="2" stroke="black" strokeWidth="0.5" fill="yellow" />
     </g>
   );
@@ -46,7 +46,7 @@ function drawBall(ball, index) {
 
 function drawShip(ship) {
   return (
-    <g transform={`translate(${ship.x} ${ship.y}) rotate(${ship.angle / Math.PI * 180})`} key={ship.playerId}>
+    <g transform={`translate(${ship.body.position[0]} ${ship.body.position[1]}) rotate(${ship.body.angle / Math.PI * 180})`} key={ship.playerId}>
         <circle cx="0" cy="0" r="3" stroke="black" strokeWidth="0.5" fill={teamFills[ship.team]} />
         
         {drawBoosters(ship)}
@@ -71,18 +71,18 @@ function drawBoosters(ship) {
   }
 
   if (forwardBoost >= 2) {
-    flames.push(<polygon points="-3,-2 -1,-2 -2,-5" x="-20" fill="orange"/>);
-    flames.push(<polygon points="3,-2 1,-2 2,-5" x="-20" fill="orange"/>);
+    flames.push(<polygon points="-3,-2 -1,-2 -2,-5" x="-20" fill="orange" key="1"/>);
+    flames.push(<polygon points="3,-2 1,-2 2,-5" x="-20" fill="orange" key="2"/>);
   }
 
   if (forwardBoost >= 1) {
-    flames.push(<polygon points="-3,-2 -1,-2 -2,-3" x="-20" fill="red"/>);
-    flames.push(<polygon points="3,-2 1,-2 2,-3" x="-20" fill="red"/>);
+    flames.push(<polygon points="-3,-2 -1,-2 -2,-3" x="-20" fill="red" key="3"/>);
+    flames.push(<polygon points="3,-2 1,-2 2,-3" x="-20" fill="red" key="4"/>);
   }
 
   if (ship.controls.down) {
-    flames.push(<polygon points="-3,2 -1,2 -2,3" x="-20" fill="red"/>);
-    flames.push(<polygon points="3,2 1,2 2,3" x="-20" fill="red"/>);
+    flames.push(<polygon points="-3,2 -1,2 -2,3" x="-20" fill="red" key="5"/>);
+    flames.push(<polygon points="3,2 1,2 2,3" x="-20" fill="red" key="6"/>);
   }
 
   return flames;

@@ -2,6 +2,12 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import './index.css';
 
+import { makeInstance } from './gameState/game';
+
+
+
+let gameInstance = null;
+
 function render(state) {
   ReactDOM.render(
     App(state),
@@ -80,41 +86,63 @@ document.addEventListener('keyup', (e) => {
   }
 });
 
+function renderMovingThingsToState(payload) {
+  const localPlayer = payload.players.find((player) => player.playerId === state.myPlayerId);
+  const cameraPosition = localPlayer
+    ? {
+      x: cameraSmoothing.player * localPlayer.body.position[0] + cameraSmoothing.camera * state.camera.x,
+      y: cameraSmoothing.player * localPlayer.body.position[1] + cameraSmoothing.camera * state.camera.y,
+    }
+    : { x: 0, y: 0 };
+
+  state = {
+    ...state,
+    localPlayer,
+    camera: cameraPosition,
+    world: {
+      ...state.world,
+      ...payload,
+    }
+  };
+}
+
+function renderInitialStateToState(payload) {
+  state = {
+    ...state,
+    myPlayerId: payload.yourId,
+    world: {
+      ...state.world,
+      level: gameInstance.renderLevel(),
+    }
+  };
+}
+
+function renderGameStateToState(payload) {
+  state = {
+    ...state,
+    gameState: payload.gameState,
+  };
+}
+
+function startRenderingFromLocal() {
+
+  setInterval(() => {
+    gameInstance.animate(Date.now());
+    renderMovingThingsToState(gameInstance.renderMovingThings());
+    render(state);
+  }, 1000/60);
+
+}
+
 exampleSocket.onmessage = (message) => {
   const payload = JSON.parse(message.data);
-  if (payload.messageType === 'renderedWorld') {
-    const localPlayer = payload.players.find((player) => player.playerId === state.myPlayerId);
-    const cameraPosition = localPlayer
-      ? {
-        x: cameraSmoothing.player * localPlayer.x + cameraSmoothing.camera * state.camera.x,
-        y: cameraSmoothing.player * localPlayer.y + cameraSmoothing.camera  * state.camera.y,
-      }
-      : { x: 0, y: 0 };
-
-    state = {
-      ...state,
-      localPlayer,
-      camera: cameraPosition,
-      world: {
-        ...state.world,
-        ...payload,
-      }
-    };
-
-    render(state);
+  if (payload.messageType === 'movingThingUpdate') {
+    gameInstance.applyAuthorativeUpdate(payload);
   } else if (payload.messageType === 'initialSetup') {
-    state = {
-      ...state,
-      myPlayerId: payload.yourId,
-      world: {
-        ...state.world,
-        level: payload.level,
-      }
-    };
+    gameInstance = makeInstance(payload.level);
+    startRenderingFromLocal();
+    renderInitialStateToState(payload);
   } else if (payload.messageType === 'gameState') {
-    state = {
-      ...state,
-      gameState: payload.gameState,
-    };
+    renderGameStateToState(payload);
   }
 };

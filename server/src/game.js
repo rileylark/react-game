@@ -73,7 +73,10 @@ export function makeInstance(levelDef) {
                 return [redCount + 1, blueCount];
             } else if (team === 'blue') {
                 return [redCount, blueCount + 1];
+            } else {
+                return [redCount, blueCount];
             }
+
         }, [0, 0]);
 
         return {
@@ -179,8 +182,8 @@ export function makeInstance(levelDef) {
 
     function renderBody(body) {
         return {
-            x: body.interpolatedPosition[0],
-            y: body.interpolatedPosition[1],
+            position: [body.interpolatedPosition[0], body.interpolatedPosition[1]],
+            velocity: [body.velocity[0], body.velocity[1]],
             angle: body.angle,
         }
     }
@@ -220,7 +223,7 @@ export function makeInstance(levelDef) {
         const players = Object.keys(currentPlayers).map((playerId) => {
             const player = currentPlayers[playerId];
             return {
-                ...renderBody(player.body),
+                body: renderBody(player.body),
                 team: player.team,
                 playerId,
                 percentBoostLeft: player.secondsOfBoostLeft / maxSecondsOfBoost,
@@ -228,12 +231,39 @@ export function makeInstance(levelDef) {
             };
         });
 
-        const balls = [renderBody(gameBall.body)];
+        const ball = {
+            body: renderBody(gameBall.body)
+        };
 
         return {
             players,
-            balls,
+            ball,
         };
+    }
+
+    function applyAuthorativeUpdate(update) {
+        // first apply players
+        update.players.forEach((remotePlayer) => {
+            // copy remote player to local player
+            let localPlayer = currentPlayers[remotePlayer.playerId];
+
+            if (!localPlayer) {
+                addPlayer(remotePlayer.playerId);
+                localPlayer = currentPlayers[remotePlayer.playerId];
+            }
+            
+            localPlayer.body.position = remotePlayer.body.position;
+            localPlayer.body.velocity = remotePlayer.body.velocity;
+            localPlayer.body.angle = remotePlayer.body.angle;
+            localPlayer.controls = remotePlayer.controls;
+            localPlayer.secondsOfBoostLeft = remotePlayer.percentBoostLeft * maxSecondsOfBoost;
+            localPlayer.team = remotePlayer.team;
+        });
+
+        // then apply ball
+        gameBall.position = update.ball.body.position;
+        gameBall.angle = update.ball.body.angle;
+        gameBall.velocity = update.ball.body.velocity;
     }
 
     function renderLevel() {
@@ -308,6 +338,7 @@ export function makeInstance(levelDef) {
     return { 
         animate, 
         addPlayer, 
+        applyAuthorativeUpdate,
         removePlayer, 
         renderMovingThings, 
         renderGameState, 

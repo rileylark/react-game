@@ -2,8 +2,8 @@ import { Server } from 'uws';
 import { makeInstance } from './game';
 import hockeyMap from './hockeyMap';
 
-const physicsFramerate = 30; // Hz
-const networkUpdateFramerate = 5; // Hz
+const physicsFramerate = 60; // Hz
+const networkUpdateFramerate = 10; // Hz
 
 const wss = new Server({ port: 3001 });
  
@@ -39,7 +39,7 @@ wss.on('connection', function(ws) {
     const initialMessage = JSON.stringify({
         messageType: 'initialSetup',
         yourId: userId,
-        // level: renderLevel()
+        level: hockeyMap
     });
 
     ws.on('close', () => {
@@ -66,7 +66,7 @@ setInterval(() => {
 
 setInterval(() => {
     const message = JSON.stringify({
-        messageType: 'renderedWorld',
+        messageType: 'movingThingUpdate',
         ...gameInstance.renderMovingThings()
     });
 

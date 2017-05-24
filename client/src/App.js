@@ -24,27 +24,29 @@ function Scoreboard({ gameState, localPlayer }) {
     return (
       <div className="scoreboard">
         <table>
-          <tr>
-            <th>Blue</th>
-            <th>Red</th>
-            <th>Time Left</th>
-          </tr>
-          <tr>
-            <td>
-              {gameState.score.blue}
-            </td>
-            <td>
-              {gameState.score.red}
-            </td>
-            <td> {secondsLeft}</td>
-          </tr>
+          <tbody>
+            <tr>
+              <th>Blue</th>
+              <th>Red</th>
+              <th>Time Left</th>
+            </tr>
+            <tr>
+              <td>
+                {gameState.score.blue}
+              </td>
+              <td>
+                {gameState.score.red}
+              </td>
+              <td> {secondsLeft}</td>
+            </tr>
+          </tbody>
         </table>
       </div>
     );
   } else {
     return (
       <div className="scoreboard">
-      <h1> Game Over! {gameState.winner} wins!</h1>
+        <h1> Game Over! {gameState.winner} wins!</h1>
       </div>
     )
   }
