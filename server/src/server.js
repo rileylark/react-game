@@ -2,7 +2,7 @@ import { Server } from 'uws';
 import { makeInstance } from './game';
 import hockeyMap from './hockeyMap';
 
-const physicsFramerate = 60; // Hz
+const physicsFramerate = 30; // Hz
 const networkUpdateFramerate = 10; // Hz
 
 const wss = new Server({ port: 3001 });
