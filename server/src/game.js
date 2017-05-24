@@ -331,6 +331,10 @@ export function makeInstance(levelDef) {
         })
     });
 
+    function renderControls(playerId) {
+        return currentPlayers[playerId].controls;
+    }
+    
     function mergeNewControls(playerId, newControls) {
         const player = currentPlayers[playerId];
         player.controls = {
@@ -344,6 +348,7 @@ export function makeInstance(levelDef) {
         addPlayer, 
         applyAuthorativeUpdate,
         removePlayer, 
+        renderControls,
         renderMovingThings, 
         renderGameState, 
         renderLevel, 

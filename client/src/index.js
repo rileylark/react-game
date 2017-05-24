@@ -144,5 +144,9 @@ exampleSocket.onmessage = (message) => {
     renderInitialStateToState(payload);
   } else if (payload.messageType === 'gameState') {
     renderGameStateToState(payload);
+  } else if (payload.messageType === 'playerLeft') {
+    gameInstance.removePlayer(payload.data.playerId);
+  } else if (payload.messageType === 'newControls') {
+    gameInstance.mergeNewControls(payload.data.playerId, payload.data.newControls);
   }
 };

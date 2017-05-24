@@ -13,6 +13,8 @@ function onMessage(userId, messageJson) {
         if (message.messageType === 'controlChange') {
             gameInstance.mergeNewControls(userId, message.controls);
         }
+
+        broadcast('newControls', { playerId: userId, newControls: gameInstance.renderControls(userId) });
     } catch (e) {
         console.error("ERROR");
         console.error(e);
@@ -46,6 +48,8 @@ wss.on('connection', function(ws) {
         gameInstance.removePlayer(userId);
         const indexOfConnection = connections.indexOf(connection);
         connections.splice(indexOfConnection, 1);
+
+        broadcast('playerLeft', { playerId: userId });
     });
 
     ws.send(initialMessage);
@@ -64,7 +68,9 @@ setInterval(() => {
     });
 }, 1000/2);
 
-setInterval(() => {
+setInterval(broadcastMovingThings, 1000/networkUpdateFramerate);
+
+function broadcastMovingThings() {
     const message = JSON.stringify({
         messageType: 'movingThingUpdate',
         ...gameInstance.renderMovingThings()
@@ -73,5 +79,11 @@ setInterval(() => {
     connections.forEach((connection) => {
         connection.ws.send(message);
     });
-}, 1000/networkUpdateFramerate
-);
+}
+
+function broadcast(messageType, data) {
+    const message = JSON.stringify({ messageType, data });
+    connections.forEach((connection) => {
+        connection.ws.send(message);
+    });
+}
