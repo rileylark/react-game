@@ -241,6 +241,10 @@ export function makeInstance(levelDef) {
         };
     }
 
+    function avg(vec1, vec2, bias) {
+        return [(vec1[0] * bias + vec2[0] * (1-bias)), (vec1[1] * bias + vec2[1] * (1-bias))];
+    }
+
     function applyAuthorativeUpdate(update) {
         // first apply players
         update.players.forEach((remotePlayer) => {
@@ -252,7 +256,7 @@ export function makeInstance(levelDef) {
                 localPlayer = currentPlayers[remotePlayer.playerId];
             }
             
-            localPlayer.body.position = remotePlayer.body.position;
+            localPlayer.body.position = avg(remotePlayer.body.position, localPlayer.body.position, 0.3);
             localPlayer.body.velocity = remotePlayer.body.velocity;
             localPlayer.body.angle = remotePlayer.body.angle;
             localPlayer.controls = remotePlayer.controls;
@@ -261,7 +265,7 @@ export function makeInstance(levelDef) {
         });
 
         // then apply ball
-        gameBall.position = update.ball.body.position;
+        gameBall.position = avg(update.ball.body.position, gameBall.position, 0.3);
         gameBall.angle = update.ball.body.angle;
         gameBall.velocity = update.ball.body.velocity;
     }
