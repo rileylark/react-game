@@ -4,18 +4,27 @@ const initialGameState = {
         blue: 0,
         red: 0,
     },
+    ballAttraction: {
+        inGravityWell: {
+            playerIds: []
+        },
+    }
 };
 
-function stepInPlayingMode(previousState, action) {
-    if (action.eventType === 'GOAL') {
-        return {
-            ...previousState,
-            score: {
-                ...previousState.score,
-                [action.team]: previousState.score[action.team] + 1,
-            }
+const actionHandlers = {};
+
+actionHandlers['GOAL'] = (previousState, action) => {
+    return {
+        ...previousState,
+        score: {
+            ...previousState.score,
+            [action.team]: previousState.score[action.team] + 1,
         }
-    } else if (action.eventType === 'TIME') {
+    };
+}
+
+actionHandlers['TIME'] = (previousState, action) => {
+    if (previousState.mode === 'playing') {
         if (action.time > previousState.endTime) {
             if (previousState.score.blue === previousState.score.red) {
                 // overtime!
@@ -38,13 +47,7 @@ function stepInPlayingMode(previousState, action) {
                 currentTime: action.time
             }
         }
-    }
-
-    return previousState;
-}
-
-function stepInGameoverMode(previousState, action) {
-    if (action.eventType === 'TIME') {
+    } else {
         if (action.time > previousState.nextGameStartTime) {
             return { ...initialGameState, endTime: action.time + 60 * 1000, currentTime: action.time };
         } else {
@@ -53,29 +56,76 @@ function stepInGameoverMode(previousState, action) {
                 currentTime: action.time
             }
         }
-    } 
+    }
+};
 
-    return previousState;
+actionHandlers['BALL_ENTERED_GRAVITY_WELL'] = (previousState, action) => {
+    if (previousState.ballAttraction.inGravityWell.playerIds.indexOf(action.playerId) === -1) {
+        return {
+            ...previousState,
+            ballAttraction: {
+                ...previousState.ballAttraction,
+                inGravityWell: {
+                    ...previousState.ballAttraction.inGravityWell,
+                    playerIds: previousState.ballAttraction.inGravityWell.playerIds.concat([action.playerId])
+                }
+            }
+        };
+    } else {
+        return previousState;
+    }
 }
 
-function step(previousState, nextEvent) {
-    if (previousState.mode === 'playing') {
-        return stepInPlayingMode(previousState, nextEvent);
+actionHandlers['BALL_LEFT_GRAVITY_WELL'] = (previousState, action) => {
+    const index = previousState.ballAttraction.inGravityWell.playerIds.indexOf(action.playerId) !== -1;
+    if (index) {
+        return {
+            ...previousState,
+            ballAttraction: {
+                ...previousState.ballAttraction,
+                inGravityWell: {
+                    ...previousState.ballAttraction.inGravityWell,
+                    playerIds: previousState.ballAttraction.inGravityWell.playerIds.slice(index, index)
+                }
+            }
+        };
     } else {
-        return stepInGameoverMode(previousState, nextEvent);
+        return previousState;
+    }
+}
+
+function step(previousState, action) {
+    const handler = actionHandlers[action.eventType];
+    if (handler) {
+        return handler(previousState, action);
+    } else {
+        return previousState;
     }
 }
 
 export function createGame() {
     let currentGameState = { ...initialGameState, currentTime: Date.now(), endTime: Date.now() + 60 * 1000 };
+    const listeners = [];
+
+    function broadcast(state) {
+        listeners.forEach((listener) => {
+            listener(state);
+        });
+    }
 
     return {
         dispatch(event) {
             currentGameState = step(currentGameState, event);
+            broadcast(currentGameState)
         },
 
         getCurrentState() {
             return { ...currentGameState };
+        },
+
+        addListener(newListener) {
+            listeners.push(newListener);
+            newListener(currentGameState);
         }
     };
 }

@@ -3,7 +3,15 @@ import { createGame } from './gameRules';
 
 export function makeInstance(levelDef) {
 
-    const collisionBitNames = ['RED_PLAYER', 'BLUE_PLAYER', 'BALL', 'LEVEL'];
+    const collisionBitNames = [
+        'RED_PLAYER',
+        'RED_PLAYER_GRAVITY_WELL',
+        'BLUE_PLAYER',
+        'BLUE_PLAYER_GRAVITY_WELL',
+        'BALL',
+        'LEVEL'
+    ];
+
     const collisionBits = {};
     collisionBitNames.forEach((name, index) => {
         collisionBits[name] = Math.pow(2, index);
@@ -27,6 +35,12 @@ export function makeInstance(levelDef) {
             time: Date.now()
         });
     }, 1000);
+
+    let currentBallGravityPlayerIds = [];
+
+    game.addListener((newState) => {
+        currentBallGravityPlayerIds = newState.ballAttraction.inGravityWell.playerIds;
+    });
 
     const steelMaterial = new p2.Material();
 
@@ -91,13 +105,21 @@ export function makeInstance(levelDef) {
         const spawnLocation = levelDef.spawnLocations[team][teamCounts[team] % levelDef.spawnLocations[team].length];
 
         const shape = new p2.Circle({ radius: 3, material: steelMaterial });
+        const gravityWellShape = new p2.Circle({
+            radius: 6,
+            sensor: true,
+            collisionMask: makeCollisionMask(['BALL']),
+        });
 
         if (team === 'blue') {
             shape.collisionGroup = collisionBits['BLUE_PLAYER'];
-            shape.collisionMask = makeCollisionMask(['RED_PLAYER', 'BALL', 'LEVEL']);
+            shape.collisionMask = makeCollisionMask(['RED_PLAYER', 'LEVEL']);
+            gravityWellShape.collisionGroup = collisionBits['BLUE_PLAYER_GRAVITY_WELL'];
+
         } else if (team === 'red') {
             shape.collisionGroup = collisionBits['RED_PLAYER'];
-            shape.collisionMask = makeCollisionMask(['BLUE_PLAYER', 'BALL', 'LEVEL']);
+            shape.collisionMask = makeCollisionMask(['BLUE_PLAYER', 'LEVEL']);
+            gravityWellShape.collisionGroup = collisionBits['RED_PLAYER_GRAVITY_WELL'];
         }
 
         var body = new p2.Body({
@@ -108,9 +130,12 @@ export function makeInstance(levelDef) {
         });
 
         body.addShape(shape);
+        body.addShape(gravityWellShape);
+
         return {
             shape,
             body,
+            gravityWellShape,
             id: playerId,
             controls: {},
             team: team,
@@ -123,7 +148,7 @@ export function makeInstance(levelDef) {
             radius: 2,
             material: steelMaterial,
             collisionGroup: collisionBits['BALL'],
-            collisionMask: makeCollisionMask(['BLUE_PLAYER', 'RED_PLAYER', 'LEVEL']),
+            collisionMask: makeCollisionMask(['BLUE_PLAYER', 'RED_PLAYER', 'LEVEL', 'BLUE_PLAYER_GRAVITY_WELL', 'RED_PLAYER_GRAVITY_WELL']),
         });
 
         var body = new p2.Body({
@@ -242,7 +267,7 @@ export function makeInstance(levelDef) {
     }
 
     function avg(vec1, vec2, bias) {
-        return [(vec1[0] * bias + vec2[0] * (1-bias)), (vec1[1] * bias + vec2[1] * (1-bias))];
+        return [(vec1[0] * bias + vec2[0] * (1 - bias)), (vec1[1] * bias + vec2[1] * (1 - bias))];
     }
 
     function applyAuthorativeUpdate(update) {
@@ -255,7 +280,7 @@ export function makeInstance(levelDef) {
                 addPlayer(remotePlayer.playerId);
                 localPlayer = currentPlayers[remotePlayer.playerId];
             }
-            
+
             localPlayer.body.position = avg(remotePlayer.body.position, localPlayer.body.position, 0.3);
             localPlayer.body.velocity = remotePlayer.body.velocity;
             localPlayer.body.angle = remotePlayer.body.angle;
@@ -308,6 +333,7 @@ export function makeInstance(levelDef) {
         }
     }
 
+    // apply controls
     world.on('postStep', () => {
         Object.keys(currentPlayers).forEach((playerId) => {
             const player = currentPlayers[playerId];
@@ -315,16 +341,74 @@ export function makeInstance(levelDef) {
         });
     });
 
+    // apply ball attraction
+    world.on('postStep', () => {
+        const ballBody = gameBall.body;
+        currentBallGravityPlayerIds.forEach((playerId) => {
+            const playerBody = currentPlayers[playerId].body;
+
+            const d2 = Math.min(p2.vec2.squaredDistance(playerBody.position, ballBody.position), 1);
+            const forceMagnitude = 100 / d2;
+
+            const force = [];
+            p2.vec2.subtract(force, playerBody.position, ballBody.position);
+            p2.vec2.normalize(force, force);
+            p2.vec2.scale(force, force, forceMagnitude);
+
+            ballBody.applyForce(force);
+            p2.vec2.scale(force, force, -1);
+            playerBody.applyForce(force);            
+        });
+    });
+
     world.on('beginContact', ({ shapeA, shapeB }) => {
         const shapes = [shapeA, shapeB];
         [gameBall].forEach((ball) => {
+            if (shapes.indexOf(ball.shape) === -1) {
+                return;
+            }
+
+            // detect goals
             goals.forEach((goal) => {
-                if (shapes.indexOf(ball.shape) !== -1 && shapes.indexOf(goal.shape) !== -1) {
+                if (shapes.indexOf(goal.shape) !== -1) {
                     ball.body.position = [0, 0];
                     ball.body.velocity = [0, 0];
                     game.dispatch({
                         eventType: 'GOAL',
                         team: goal.team
+                    });
+                }
+            });
+
+            // detect gravityWells
+            Object.keys(currentPlayers).forEach((playerId) => {
+                const player = currentPlayers[playerId];
+                if (shapes.indexOf(player.gravityWellShape) !== -1) {
+                    game.dispatch({
+                        eventType: 'BALL_ENTERED_GRAVITY_WELL',
+                        team: player.team,
+                        playerId: player.id
+                    });
+                }
+            });
+        })
+    });
+
+    world.on('endContact', ({ shapeA, shapeB }) => {
+        const shapes = [shapeA, shapeB];
+        [gameBall].forEach((ball) => {
+            if (shapes.indexOf(ball.shape) === -1) {
+                return;
+            }
+
+            // detect gravityWells
+            Object.keys(currentPlayers).forEach((playerId) => {
+                const player = currentPlayers[playerId];
+                if (shapes.indexOf(player.gravityWellShape) !== -1) {
+                    game.dispatch({
+                        eventType: 'BALL_LEFT_GRAVITY_WELL',
+                        team: player.team,
+                        playerId: player.id
                     });
                 }
             });
@@ -334,7 +418,7 @@ export function makeInstance(levelDef) {
     function renderControls(playerId) {
         return currentPlayers[playerId].controls;
     }
-    
+
     function mergeNewControls(playerId, newControls) {
         const player = currentPlayers[playerId];
         player.controls = {
@@ -343,15 +427,15 @@ export function makeInstance(levelDef) {
         };
     }
 
-    return { 
-        animate, 
-        addPlayer, 
+    return {
+        animate,
+        addPlayer,
         applyAuthorativeUpdate,
-        removePlayer, 
+        removePlayer,
         renderControls,
-        renderMovingThings, 
-        renderGameState, 
-        renderLevel, 
-        mergeNewControls 
+        renderMovingThings,
+        renderGameState,
+        renderLevel,
+        mergeNewControls
     };
 }
