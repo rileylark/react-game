@@ -20,6 +20,10 @@ actionHandlers['GOAL'] = (previousState, action) => {
         score: {
             ...previousState.score,
             [action.team]: previousState.score[action.team] + 1,
+        },
+        ballAttraction: {
+            ...previousState.ballAttraction,
+            lodgedInPlayer: null
         }
     };
 }

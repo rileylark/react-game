@@ -118,6 +118,8 @@ function renderInitialStateToState(payload) {
 }
 
 function renderGameStateToState(payload) {
+  // TODO: Hey actually this should put this gameState in the internal state machine,
+  // and it should only show up here after coming OUT of `gameInstance`!
   state = {
     ...state,
     gameState: payload.gameState,

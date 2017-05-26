@@ -50,15 +50,23 @@ export function makeInstance(levelDef) {
             // we need to change the constraint situation
             if (currentBallLodgeConstraint.p2Constraint) {
                 world.removeConstraint(currentBallLodgeConstraint.p2Constraint);
+                currentBallLodgeConstraint = {
+                    playerId: null,
+                    p2Constraint: null,
+                };
             }
             
-            const newP2Constraint = new p2.DistanceConstraint(gameBall.body, currentPlayers[currentLodgedPlayerId].body, { distance: 0, maxForce: 500});
-            world.addConstraint(newP2Constraint);
+            // and possibly add a new one!
+            if (currentLodgedPlayerId) {
+                console.log("Adding new constraint");
+                const newP2Constraint = new p2.DistanceConstraint(gameBall.body, currentPlayers[currentLodgedPlayerId].body, { distance: 0, maxForce: 750});
+                world.addConstraint(newP2Constraint);
 
-            currentBallLodgeConstraint = {
-                playerId: currentLodgedPlayerId,
-                p2Constraint: newP2Constraint,
-            };
+                currentBallLodgeConstraint = {
+                    playerId: currentLodgedPlayerId,
+                    p2Constraint: newP2Constraint,
+                };
+            }
         }
     });
 
@@ -375,7 +383,7 @@ export function makeInstance(levelDef) {
 
             const d2 = p2.vec2.squaredDistance(playerBody.position, ballBody.position);
 
-            if (d2 > 1) {
+            if (d2 > 3) {
                 const forceMagnitude = 1000 / d2;
 
                 const force = [];
@@ -394,6 +402,32 @@ export function makeInstance(levelDef) {
             }
         });
     });
+
+    // look for player bumps to dislodge balls
+    world.on('beginContact', ({ shapeA, shapeB }) => {
+        if (currentGameState.ballAttraction.lodgedInPlayer) {
+            // the ball is lodged. Did we hit that player?
+            const lodgedPlayer = currentPlayers[currentGameState.ballAttraction.lodgedInPlayer];
+            if (shapeA === lodgedPlayer.shape) {
+
+                //is the thing that hit this player... another player?
+                forEachPlayer((anotherPlayer) => {
+                    if (shapeB === anotherPlayer.shape) {
+                        game.dispatch({
+                            eventType: 'BALL_DISLODGED'
+                        });
+                    }
+                })
+            }
+
+        }
+    });
+
+    function forEachPlayer(cb) {
+        Object.keys(currentPlayers).forEach((playerId) => {
+            cb(currentPlayers[playerId]);
+        });
+    }
 
     world.on('beginContact', ({ shapeA, shapeB }) => {
         const shapes = [shapeA, shapeB];
