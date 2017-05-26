@@ -265,7 +265,7 @@ export function makeInstance(levelDef) {
         });
 
         // then apply ball
-        gameBall.position = avg(update.ball.body.position, gameBall.position, 0.3);
+        gameBall.position = avg(update.ball.body.position, gameBall.body.position, 0.3);
         gameBall.angle = update.ball.body.angle;
         gameBall.velocity = update.ball.body.velocity;
     }
