@@ -36,10 +36,30 @@ export function makeInstance(levelDef) {
         });
     }, 1000);
 
-    let currentBallGravityPlayerIds = [];
+    let currentGameState = game.getCurrentState();
+    let currentBallLodgeConstraint = {
+        playerId: null,
+        p2Constraint: null,
+    };
 
     game.addListener((newState) => {
-        currentBallGravityPlayerIds = newState.ballAttraction.inGravityWell.playerIds;
+        currentGameState = newState;
+        const currentLodgedPlayerId = currentGameState.ballAttraction.lodgedInPlayer;
+
+        if (currentLodgedPlayerId !== currentBallLodgeConstraint.playerId) {
+            // we need to change the constraint situation
+            if (currentBallLodgeConstraint.p2Constraint) {
+                world.removeConstraint(currentBallLodgeConstraint.p2Constraint);
+            }
+            
+            const newP2Constraint = new p2.DistanceConstraint(gameBall.body, currentPlayers[currentLodgedPlayerId].body, { distance: 0, maxForce: 500});
+            world.addConstraint(newP2Constraint);
+
+            currentBallLodgeConstraint = {
+                playerId: currentLodgedPlayerId,
+                p2Constraint: newP2Constraint,
+            };
+        }
     });
 
     const steelMaterial = new p2.Material();
@@ -343,21 +363,35 @@ export function makeInstance(levelDef) {
 
     // apply ball attraction
     world.on('postStep', () => {
+    
+        if (!!currentGameState.ballAttraction.lodgedInPlayer) {
+            // If it's lodged in any player then we don't apply any gravity
+            return;
+        }
+
         const ballBody = gameBall.body;
-        currentBallGravityPlayerIds.forEach((playerId) => {
+        currentGameState.ballAttraction.inGravityWell.playerIds.forEach((playerId) => {
             const playerBody = currentPlayers[playerId].body;
 
-            const d2 = Math.min(p2.vec2.squaredDistance(playerBody.position, ballBody.position), 1);
-            const forceMagnitude = 100 / d2;
+            const d2 = p2.vec2.squaredDistance(playerBody.position, ballBody.position);
 
-            const force = [];
-            p2.vec2.subtract(force, playerBody.position, ballBody.position);
-            p2.vec2.normalize(force, force);
-            p2.vec2.scale(force, force, forceMagnitude);
+            if (d2 > 1) {
+                const forceMagnitude = 1000 / d2;
 
-            ballBody.applyForce(force);
-            p2.vec2.scale(force, force, -1);
-            playerBody.applyForce(force);            
+                const force = [];
+                p2.vec2.subtract(force, playerBody.position, ballBody.position);
+                p2.vec2.normalize(force, force);
+                p2.vec2.scale(force, force, forceMagnitude);
+
+                ballBody.applyForce(force);
+                p2.vec2.scale(force, force, -1);
+                playerBody.applyForce(force);
+            } else {
+                game.dispatch({
+                    eventType: 'BALL_HIT_SHIP_CENTER',
+                    playerId: playerId,
+                });
+            }
         });
     });
 

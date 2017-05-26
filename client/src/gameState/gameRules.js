@@ -8,6 +8,7 @@ const initialGameState = {
         inGravityWell: {
             playerIds: []
         },
+        lodgedInPlayer: null
     }
 };
 
@@ -35,6 +36,7 @@ actionHandlers['TIME'] = (previousState, action) => {
                 };
             } else {
                 return {
+                    ...previousState,
                     mode: 'gameover',
                     winner: previousState.score.blue > previousState.score.red ? 'blue' : 'red',
                     nextGameStartTime: action.time + 10 * 1000,
@@ -91,6 +93,16 @@ actionHandlers['BALL_LEFT_GRAVITY_WELL'] = (previousState, action) => {
         };
     } else {
         return previousState;
+    }
+}
+
+actionHandlers['BALL_HIT_SHIP_CENTER'] = (previousState, action) => {
+    return {
+        ...previousState,
+        ballAttraction: {
+            ...previousState.ballAttraction,
+            lodgedInPlayer: action.playerId,
+        }
     }
 }
 
