@@ -62,10 +62,10 @@ export function makeInstance(levelDef) {
                     p2Constraint: null,
                 };
             }
-            
+
             // and possibly add a new one!
             if (currentLodgedPlayerId) {
-                const newP2Constraint = new p2.DistanceConstraint(gameBall.body, currentPlayers[currentLodgedPlayerId].body, { distance: 0, maxForce: 750});
+                const newP2Constraint = new p2.DistanceConstraint(gameBall.body, currentPlayers[currentLodgedPlayerId].body, { distance: 0, maxForce: 750 });
                 world.addConstraint(newP2Constraint);
 
                 currentBallLodgeConstraint = {
@@ -136,7 +136,7 @@ export function makeInstance(levelDef) {
 
         const shape = new p2.Circle({ radius: 3, material: steelMaterial });
         const gravityWellShape = new p2.Circle({
-            radius: 6,
+            radius: 10,
             sensor: true,
             collisionMask: makeCollisionMask(['BALL']),
         });
@@ -374,7 +374,7 @@ export function makeInstance(levelDef) {
 
     // apply ball attraction
     world.on('postStep', () => {
-    
+
         if (!!currentGameState.ballAttraction.lodgedInPlayer) {
             // If it's lodged in any player then we don't apply any gravity
             return;
@@ -382,6 +382,10 @@ export function makeInstance(levelDef) {
 
         const ballBody = gameBall.body;
         currentGameState.ballAttraction.inGravityWell.playerIds.forEach((playerId) => {
+            if (currentGameState.ballAttraction.gravityDisabledForPlayerId === playerId) {
+                return;
+            }
+
             const playerBody = currentPlayers[playerId].body;
 
             const d2 = p2.vec2.squaredDistance(playerBody.position, ballBody.position);
@@ -411,15 +415,19 @@ export function makeInstance(levelDef) {
         if (currentGameState.ballAttraction.lodgedInPlayer) {
             // the ball is lodged. Did we hit that player?
             const lodgedPlayer = currentPlayers[currentGameState.ballAttraction.lodgedInPlayer];
-            if (shapeA === lodgedPlayer.shape) {
+            if (shapeA === lodgedPlayer.shape || shapeB === lodgedPlayer.shape) {
 
                 //is the thing that hit this player... another player?
+                // Note: same-team players will not show up here because of collision masks
                 forEachPlayer((anotherPlayer) => {
-                    if (shapeB === anotherPlayer.shape) {
-                        game.dispatch({
-                            eventType: 'BALL_DISLODGED'
-                        });
+                    if (anotherPlayer.id !== lodgedPlayer.id) {
+                        if (shapeA === anotherPlayer.shape || shapeB === anotherPlayer.shape) {
+                            game.dispatch({
+                                eventType: 'BALL_DISLODGED'
+                            });
+                        }
                     }
+
                 })
             }
 

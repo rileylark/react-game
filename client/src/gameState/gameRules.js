@@ -8,7 +8,8 @@ const initialGameState = {
         inGravityWell: {
             playerIds: []
         },
-        lodgedInPlayer: null
+        lodgedInPlayer: null,
+        gravityDisabledForPlayerIds: [],
     }
 };
 
@@ -23,7 +24,8 @@ actionHandlers['GOAL'] = (previousState, action) => {
         },
         ballAttraction: {
             ...previousState.ballAttraction,
-            lodgedInPlayer: null
+            lodgedInPlayer: null,
+            gravityDisabledForPlayerId: null,
         }
     };
 }
@@ -84,6 +86,8 @@ actionHandlers['BALL_ENTERED_GRAVITY_WELL'] = (previousState, action) => {
 
 actionHandlers['BALL_LEFT_GRAVITY_WELL'] = (previousState, action) => {
     const index = previousState.ballAttraction.inGravityWell.playerIds.indexOf(action.playerId) !== -1;
+
+    const gravityDisabledForPlayerId = previousState.ballAttraction.gravityDisabledForPlayerId === action.playerId ? null : previousState.ballAttraction.gravityDisabledForPlayerId;
     if (index) {
         return {
             ...previousState,
@@ -92,12 +96,24 @@ actionHandlers['BALL_LEFT_GRAVITY_WELL'] = (previousState, action) => {
                 inGravityWell: {
                     ...previousState.ballAttraction.inGravityWell,
                     playerIds: previousState.ballAttraction.inGravityWell.playerIds.slice(index, index)
-                }
+                },
+                gravityDisabledForPlayerId
             }
         };
     } else {
         return previousState;
     }
+}
+
+actionHandlers['BALL_DISLODGED'] = (previousState, action) => {
+        return {
+        ...previousState,
+        ballAttraction: {
+            ...previousState.ballAttraction,
+            lodgedInPlayer: null,
+            gravityDisabledForPlayerId: previousState.ballAttraction.lodgedInPlayer,
+        }
+    };
 }
 
 actionHandlers['BALL_HIT_SHIP_CENTER'] = (previousState, action) => {
