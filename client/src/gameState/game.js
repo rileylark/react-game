@@ -263,12 +263,22 @@ export function makeInstance(levelDef) {
         const player = makePlayer(playerId);
         currentPlayers[playerId] = player;
         world.addBody(player.body);
+
+        game.dispatch({
+            eventType: 'ADD_PLAYER',
+            playerId
+        });
     }
 
     function removePlayer(playerId) {
         const player = currentPlayers[playerId];
         world.removeBody(player.body);
         delete currentPlayers[playerId];
+
+        game.dispatch({
+            eventType: 'REMOVE_PLAYER',
+            playerId
+        });
     }
 
     function renderMovingThings() {
@@ -504,6 +514,12 @@ export function makeInstance(levelDef) {
             ...player.controls,
             ...newControls,
         };
+
+        game.dispatch({
+            eventType: 'CONTROL_CHANGE',
+            playerId: playerId,
+            controlUpdate: newControls,
+        });
     }
 
     return {

@@ -60,6 +60,7 @@ const controlMap = {
   'ArrowLeft': 'left',
   'ArrowRight': 'right',
   'Space': 'boost',
+  'KeyW': 'sendForward',
 };
 
 document.addEventListener('keydown', (e) => {

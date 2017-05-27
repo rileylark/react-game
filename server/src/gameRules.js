@@ -9,8 +9,9 @@ const initialGameState = {
             playerIds: []
         },
         lodgedInPlayer: null,
-        gravityDisabledForPlayerIds: [],
-    }
+    },
+    currentPlayers: {},
+    pendingEffects: []
 };
 
 const actionHandlers = {};
@@ -28,6 +29,55 @@ actionHandlers['GOAL'] = (previousState, action) => {
             gravityDisabledForPlayerId: null,
         }
     };
+}
+
+actionHandlers['ADD_PLAYER'] = (previousState, action) => {
+    return {
+        ...previousState,
+        currentPlayers: {
+            ...previousState.currentPlayers,
+            [action.playerId]: {
+                controls: {}
+            }
+        }
+    };
+}
+
+actionHandlers['REMOVE_PLAYER'] = (previousState, action) => {
+    const newPlayerThing = { ...previousState.currentPlayers };
+    delete newPlayerThing[action.playerId];
+
+    return {
+        ...previousState,
+        currentPlayers: newPlayerThing
+    }
+}
+
+actionHandlers['CONTROL_CHANGE'] = (previousState, action) => {
+    let player = { ...previousState.currentPlayers[action.playerId] };
+    const shouldSendForward = !player.controls.sendForward && action.controlUpdate.sendForward && previousState.ballAttraction.lodgedInPlayer === action.playerId;
+
+    player = {
+        ...player,
+        controls: {
+            ...player.controls,
+            ...action.controlUpdate,
+        }
+    };
+
+    let newState = {
+        ...previousState,
+        currentPlayers: {
+            ...previousState.currentPlayers,
+            [action.playerId]: player
+        }
+    };
+
+    if (shouldSendForward) {
+        newState = dislodgeBall(newState);
+    }
+
+    return newState;
 }
 
 actionHandlers['TIME'] = (previousState, action) => {
@@ -105,8 +155,8 @@ actionHandlers['BALL_LEFT_GRAVITY_WELL'] = (previousState, action) => {
     }
 }
 
-actionHandlers['BALL_DISLODGED'] = (previousState, action) => {
-        return {
+function dislodgeBall(previousState) {
+    return {
         ...previousState,
         ballAttraction: {
             ...previousState.ballAttraction,
@@ -115,6 +165,10 @@ actionHandlers['BALL_DISLODGED'] = (previousState, action) => {
         }
     };
 }
+
+actionHandlers['BALL_DISLODGED'] = (previousState, action) => {
+    return dislodgeBall(previousState); // action doesn't have extra data
+};
 
 actionHandlers['BALL_HIT_SHIP_CENTER'] = (previousState, action) => {
     return {
