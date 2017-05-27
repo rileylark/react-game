@@ -142,6 +142,10 @@ export function createGame() {
         addListener(newListener) {
             listeners.push(newListener);
             newListener(currentGameState);
+        },
+
+        overrideState(newState) {
+            currentGameState = newState;
         }
     };
 }

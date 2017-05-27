@@ -117,12 +117,10 @@ function renderInitialStateToState(payload) {
   };
 }
 
-function renderGameStateToState(payload) {
-  // TODO: Hey actually this should put this gameState in the internal state machine,
-  // and it should only show up here after coming OUT of `gameInstance`!
+function renderGameStateToState(gameState) {
   state = {
     ...state,
-    gameState: payload.gameState,
+    gameState: gameState,
   };
 }
 
@@ -131,6 +129,7 @@ function startRenderingFromLocal() {
   setInterval(() => {
     gameInstance.animate(Date.now());
     renderMovingThingsToState(gameInstance.renderMovingThings());
+    renderGameStateToState(gameInstance.renderGameState());
     render(state);
   }, 1000/60);
 
@@ -139,13 +138,13 @@ function startRenderingFromLocal() {
 exampleSocket.onmessage = (message) => {
   const payload = JSON.parse(message.data);
   if (payload.messageType === 'movingThingUpdate') {
-    gameInstance.applyAuthorativeUpdate(payload);
+    gameInstance.applyAuthorativeMovingThingUpdate(payload);
   } else if (payload.messageType === 'initialSetup') {
     gameInstance = makeInstance(payload.level);
     startRenderingFromLocal();
     renderInitialStateToState(payload);
   } else if (payload.messageType === 'gameState') {
-    renderGameStateToState(payload);
+    gameInstance.applyAuthorativeGameStateUpdate(payload.gameState);
   } else if (payload.messageType === 'playerLeft') {
     gameInstance.removePlayer(payload.data.playerId);
   } else if (payload.messageType === 'newControls') {

@@ -28,6 +28,8 @@ export function makeInstance(levelDef) {
         gravity: [0, 0]
     });
 
+    const steelMaterial = new p2.Material();
+
     const game = createGame();
     setInterval(() => {
         game.dispatch({
@@ -41,6 +43,11 @@ export function makeInstance(levelDef) {
         playerId: null,
         p2Constraint: null,
     };
+
+    const currentPlayers = {}; // map from player ID to player
+
+    const gameBall = makeBall();
+    world.addBody(gameBall.body);
 
     game.addListener((newState) => {
         currentGameState = newState;
@@ -58,7 +65,6 @@ export function makeInstance(levelDef) {
             
             // and possibly add a new one!
             if (currentLodgedPlayerId) {
-                console.log("Adding new constraint");
                 const newP2Constraint = new p2.DistanceConstraint(gameBall.body, currentPlayers[currentLodgedPlayerId].body, { distance: 0, maxForce: 750});
                 world.addConstraint(newP2Constraint);
 
@@ -69,8 +75,6 @@ export function makeInstance(levelDef) {
             }
         }
     });
-
-    const steelMaterial = new p2.Material();
 
     const walls = levelDef.walls.map((wallDef) => {
         const shape = new p2.Box({
@@ -104,8 +108,6 @@ export function makeInstance(levelDef) {
     });
 
     goals.forEach((goal) => { world.addBody(goal.body) });
-
-    const currentPlayers = {}; // map from player ID to player
 
     function getTeamCounts() {
         const [redCount, blueCount] = Object.keys(currentPlayers).reduce(([redCount, blueCount], playerId) => {
@@ -188,9 +190,6 @@ export function makeInstance(levelDef) {
         body.addShape(shape);
         return { shape, body };
     }
-
-    const gameBall = makeBall();
-    world.addBody(gameBall.body);
 
     // Create contact material between the two materials.
     // The ContactMaterial defines what happens when the two materials meet.
@@ -298,7 +297,11 @@ export function makeInstance(levelDef) {
         return [(vec1[0] * bias + vec2[0] * (1 - bias)), (vec1[1] * bias + vec2[1] * (1 - bias))];
     }
 
-    function applyAuthorativeUpdate(update) {
+    function applyAuthorativeGameStateUpdate(newGameState) {
+        game.overrideState(newGameState);
+    }
+
+    function applyAuthorativeMovingThingUpdate(update) {
         // first apply players
         update.players.forEach((remotePlayer) => {
             // copy remote player to local player
@@ -498,7 +501,8 @@ export function makeInstance(levelDef) {
     return {
         animate,
         addPlayer,
-        applyAuthorativeUpdate,
+        applyAuthorativeMovingThingUpdate,
+        applyAuthorativeGameStateUpdate,
         removePlayer,
         renderControls,
         renderMovingThings,
