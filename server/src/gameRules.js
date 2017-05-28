@@ -74,11 +74,33 @@ function removePlayerFromBallAttraction(ballAttraction, playerId) {
     };
 }
 
+
+function checkForBallSends(state) {
+    // does anyone have the ball?
+    if (state.ballAttraction.lodgedInPlayer) {
+        const lodgedInPlayer = state.currentPlayers[state.ballAttraction.lodgedInPlayer];
+
+        // are they trying to shoot it?
+        if (lodgedInPlayer.controls.sendForward) {
+            return [
+                dislodgeBall(state),
+                [{
+                    effectType: 'SEND_FORWARD',
+                    fromPlayerId: state.ballAttraction.lodgedInPlayer
+                }]
+            ]
+        }
+    }
+
+    // nothing interesting, just return default
+    return [
+        state,
+        []
+    ];
+}
+
 actionHandlers['CONTROL_CHANGE'] = (previousState, action) => {
     let player = { ...previousState.currentPlayers[action.playerId] };
-    
-    const shouldSendForward = !player.controls.sendForward && action.controlUpdate.sendForward && previousState.ballAttraction.lodgedInPlayer === action.playerId;
-    const effects = [];
 
     player = {
         ...player,
@@ -96,15 +118,7 @@ actionHandlers['CONTROL_CHANGE'] = (previousState, action) => {
         }
     };
 
-    if (shouldSendForward) {
-        newState = dislodgeBall(newState);
-        effects.push({
-            effectType: 'SEND_FORWARD',
-            fromPlayerId: action.playerId
-        });
-    }
-
-    return [ newState, effects ];
+    return checkForBallSends(newState);
 }
 
 actionHandlers['TIME'] = (previousState, action) => {
@@ -157,7 +171,7 @@ actionHandlers['BALL_ENTERED_GRAVITY_WELL'] = (previousState, action) => {
             }
         }, []];
     } else {
-        return [ previousState, []];
+        return [previousState, []];
     }
 }
 

@@ -78,6 +78,10 @@ export function makeInstance(levelDef) {
             }
         }
 
+        if (!pendingEffects.forEach) {
+            console.log(action, pendingEffects);
+            console.log('messed us up');
+        }
         pendingEffects.forEach(doEffect);
 
     }
