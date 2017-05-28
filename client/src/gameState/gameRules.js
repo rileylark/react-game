@@ -1,9 +1,13 @@
-export const initialGameState = {
+const initialModeAndScore = {
     mode: 'playing',
     score: {
         blue: 0,
         red: 0,
-    },
+    }
+};
+
+export const initialGameState = {
+    ...initialModeAndScore,
     ballAttraction: {
         inGravityWell: {
             playerIds: []
@@ -54,13 +58,7 @@ actionHandlers['REMOVE_PLAYER'] = (previousState, action) => {
 
 actionHandlers['CONTROL_CHANGE'] = (previousState, action) => {
     let player = { ...previousState.currentPlayers[action.playerId] };
-    if (!player.controls) {
-        console.error("WHAT THE HELL");
-        console.error(action);
-        console.error(player);
-        console.error(previousState.currentPlayers);
-    }
-
+    
     const shouldSendForward = !player.controls.sendForward && action.controlUpdate.sendForward && previousState.ballAttraction.lodgedInPlayer === action.playerId;
 
     player = {
@@ -113,7 +111,7 @@ actionHandlers['TIME'] = (previousState, action) => {
         }
     } else {
         if (action.time > previousState.nextGameStartTime) {
-            return [{ ...initialGameState, endTime: action.time + 60 * 1000, currentTime: action.time }, []];
+            return [{ ...previousState, ...initialModeAndScore, endTime: action.time + 60 * 1000, currentTime: action.time }, []];
         } else {
             return [{
                 ...previousState,
