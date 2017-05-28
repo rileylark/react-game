@@ -69,6 +69,8 @@ export function makeInstance(levelDef) {
             // and possibly add a new one!
             if (currentLodgedPlayerId) {
                 const newP2Constraint = new p2.DistanceConstraint(gameBall.body, currentPlayers[currentLodgedPlayerId].body, { distance: 0, maxForce: 750 });
+                gameBall.body.position = [...currentPlayers[currentLodgedPlayerId].body.position];
+                gameBall.body.velocity = [...currentPlayers[currentLodgedPlayerId].body.velocity];
                 world.addConstraint(newP2Constraint);
 
                 currentBallLodgeConstraint = {
@@ -170,7 +172,7 @@ export function makeInstance(levelDef) {
 
         const shape = new p2.Circle({ radius: 3, material: steelMaterial });
         const gravityWellShape = new p2.Circle({
-            radius: 10,
+            radius: 6,
             sensor: true,
             collisionMask: makeCollisionMask(['BALL']),
         });
@@ -435,7 +437,7 @@ export function makeInstance(levelDef) {
             const d2 = p2.vec2.squaredDistance(playerBody.position, ballBody.position);
 
             if (d2 > 3) {
-                const forceMagnitude = 1000 / d2;
+                const forceMagnitude = 3000 / d2;
 
                 const force = [];
                 p2.vec2.subtract(force, playerBody.position, ballBody.position);
