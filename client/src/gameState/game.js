@@ -78,28 +78,29 @@ export function makeInstance(levelDef) {
             }
         }
 
-        if (!pendingEffects.forEach) {
-            console.log(action, pendingEffects);
-            console.log('messed us up');
-        }
         pendingEffects.forEach(doEffect);
-
     }
 
     function doEffect(effect) {
         if (effect.effectType === 'SEND_FORWARD') {
-            sendGameBallForward(effect.fromPlayerId);
+            sendGameBall(effect.fromPlayerId, [0, 1]);
+        } else if (effect.effectType === 'SEND_LEFT') {
+            sendGameBall(effect.fromPlayerId, [-1, 0]);
+        } else if (effect.effectType === 'SEND_BACKWARD') {
+            sendGameBall(effect.fromPlayerId, [0, -1]);
+        } else if (effect.effectType === 'SEND_RIGHT') {
+            sendGameBall(effect.fromPlayerId, [1, 0]);
         }
     }
 
-    function sendGameBallForward(fromPlayerId) {
+    function sendGameBall(fromPlayerId, directionUnitVector) {
         const player = currentPlayers[fromPlayerId];
         gameBall.body.position = [...player.body.position];
         gameBall.body.velocity = [...player.body.velocity];
 
         
         const ballImpulse = [];
-        p2.vec2.rotate(ballImpulse, [0, 1], player.body.angle);
+        p2.vec2.rotate(ballImpulse, directionUnitVector, player.body.angle);
         p2.vec2.scale(ballImpulse, ballImpulse, shotImpulse);
 
         const shipImpulse = [];

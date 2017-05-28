@@ -76,19 +76,30 @@ function removePlayerFromBallAttraction(ballAttraction, playerId) {
 
 
 function checkForBallSends(state) {
+    const controlToEffectMap = {
+        'sendForward': 'SEND_FORWARD',
+        'sendLeft': 'SEND_LEFT',
+        'sendRight': 'SEND_RIGHT',
+        'sendBackward': 'SEND_BACKWARD',
+    };
+
     // does anyone have the ball?
     if (state.ballAttraction.lodgedInPlayer) {
         const lodgedInPlayer = state.currentPlayers[state.ballAttraction.lodgedInPlayer];
 
         // are they trying to shoot it?
-        if (lodgedInPlayer.controls.sendForward) {
+        const effectType = Object.keys(controlToEffectMap).reduce((acc, key) => {
+            return lodgedInPlayer.controls[key] ? controlToEffectMap[key] : acc;
+        }, null);
+
+        if (effectType) {
             return [
                 dislodgeBall(state),
                 [{
-                    effectType: 'SEND_FORWARD',
+                    effectType,
                     fromPlayerId: state.ballAttraction.lodgedInPlayer
                 }]
-            ]
+            ];
         }
     }
 
