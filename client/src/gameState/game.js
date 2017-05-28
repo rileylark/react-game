@@ -18,6 +18,7 @@ export function makeInstance(levelDef) {
     });
 
     const maxSecondsOfBoost = 1;
+    const shotImpulse = 50;
 
     function makeCollisionMask(collisionBitNames) {
         return collisionBitNames.reduce((mask, name) => mask | collisionBits[name], 0);
@@ -76,6 +77,32 @@ export function makeInstance(levelDef) {
                 };
             }
         }
+
+        pendingEffects.forEach(doEffect);
+
+    }
+
+    function doEffect(effect) {
+        if (effect.effectType === 'SEND_FORWARD') {
+            sendGameBallForward(effect.fromPlayerId);
+        }
+    }
+
+    function sendGameBallForward(fromPlayerId) {
+        const player = currentPlayers[fromPlayerId];
+        gameBall.body.position = [...player.body.position];
+        gameBall.body.velocity = [...player.body.velocity];
+
+        
+        const ballImpulse = [];
+        p2.vec2.rotate(ballImpulse, [0, 1], player.body.angle);
+        p2.vec2.scale(ballImpulse, ballImpulse, shotImpulse);
+
+        const shipImpulse = [];
+        p2.vec2.scale(shipImpulse, ballImpulse, -1);
+
+        gameBall.body.applyImpulse(ballImpulse);
+        player.body.applyImpulse(shipImpulse);
     }
 
     const walls = levelDef.walls.map((wallDef) => {

@@ -52,14 +52,33 @@ actionHandlers['REMOVE_PLAYER'] = (previousState, action) => {
 
     return [{
         ...previousState,
-        currentPlayers: newPlayerThing
+        currentPlayers: newPlayerThing,
+        ballAttraction: removePlayerFromBallAttraction(previousState.ballAttraction, action.playerId),
     }, []];
+}
+
+function removePlayerFromBallAttraction(ballAttraction, playerId) {
+    let gravityWellIds = ballAttraction.inGravityWell.playerIds;
+    const playerIndex = gravityWellIds.indexOf(playerId);
+    if (playerIndex !== -1) {
+        gravityWellIds = gravityWellIds.slice(playerIndex, playerIndex);
+    }
+
+    const lodgedInPlayer = ballAttraction.lodgedInPlayer === playerId ? null : ballAttraction.lodgedInPlayer;
+
+    return {
+        inGravityWell: {
+            playerIds: gravityWellIds,
+        },
+        lodgedInPlayer
+    };
 }
 
 actionHandlers['CONTROL_CHANGE'] = (previousState, action) => {
     let player = { ...previousState.currentPlayers[action.playerId] };
     
     const shouldSendForward = !player.controls.sendForward && action.controlUpdate.sendForward && previousState.ballAttraction.lodgedInPlayer === action.playerId;
+    const effects = [];
 
     player = {
         ...player,
@@ -79,9 +98,13 @@ actionHandlers['CONTROL_CHANGE'] = (previousState, action) => {
 
     if (shouldSendForward) {
         newState = dislodgeBall(newState);
+        effects.push({
+            effectType: 'SEND_FORWARD',
+            fromPlayerId: action.playerId
+        });
     }
 
-    return [ newState, [] ];
+    return [ newState, effects ];
 }
 
 actionHandlers['TIME'] = (previousState, action) => {
