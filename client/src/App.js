@@ -6,7 +6,7 @@ import './App.css';
 function App({ world, camera, gameState, localPlayer }) {
   return (
     <div className="App">
-      {Board({ world, camera })}
+      {Board({ world, camera, localPlayer })}
       {Scoreboard({ gameState, localPlayer })}
     </div>
   );

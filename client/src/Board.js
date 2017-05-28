@@ -14,7 +14,7 @@ function drawWorld(world) {
   ];
 }
 
-export default function Board({ world, camera }) {
+export default function Board({ world, camera, localPlayer }) {
   if (!world.players || !world.ball) {
     return <div>{JSON.stringify(world)}</div>;
   } else {
@@ -26,6 +26,7 @@ export default function Board({ world, camera }) {
       <svg style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 0 }} height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
         <g transform={`translate(${xOffset} ${yOffset}) scale(1, -1)`}>
           {drawnWorld}
+          {drawHud(localPlayer)}
         </g>
         <g transform={`translate(90, 20) scale(0.1, -0.1)`} opacity="0.75">
           <rect width="200" height="400" x="-100" y="-200" fill="white" />
@@ -47,13 +48,22 @@ function drawBall(ball, index) {
 function drawShip(ship) {
   return (
     <g transform={`translate(${ship.body.position[0]} ${ship.body.position[1]}) rotate(${ship.body.angle / Math.PI * 180})`} key={ship.playerId}>
-        <circle cx="0" cy="0" r="3" stroke="black" strokeWidth="0.5" fill={teamFills[ship.team]} />
-        
-        {drawBoosters(ship)}
-        <g transform="rotate(90) scale(-1, 1)">
-          <circle cx="0" cy="0" r="2.5" stroke="green" strokeWidth="1" fill="none" strokeDasharray="15.70795" strokeDashoffset={(1-ship.percentBoostLeft) * 15.70795}/>
-        </g>
-        <line x1="0" y1="0" x2="0" y2="4" stroke="black" />
+      <circle cx="0" cy="0" r="3" stroke="black" strokeWidth="0.5" fill={teamFills[ship.team]} />
+
+      {drawBoosters(ship)}
+      <g transform="rotate(90) scale(-1, 1)">
+        <circle cx="0" cy="0" r="2.5" stroke="green" strokeWidth="1" fill="none" strokeDasharray="15.70795" strokeDashoffset={(1 - ship.percentBoostLeft) * 15.70795} />
+      </g>
+      <line x1="0" y1="0" x2="0" y2="4" stroke="black" />
+    </g>
+  );
+}
+
+function drawHud(localPlayer) {
+  return (
+    <g transform={`translate(${localPlayer.body.position[0]} ${localPlayer.body.position[1]}) rotate(${localPlayer.body.angle / Math.PI * 180})`} key={localPlayer.playerId}>
+      <line x1="0" y1="-400" x2="0" y2="400" stroke="lightgray" strokeWidth="0.05" strokeDasharray="1, 1"/>
+      <line x1="-400" y1="0" x2="400" y2="0" stroke="lightgray" strokeWidth="0.05" strokeDasharray="1, 1"/>
     </g>
   );
 }
@@ -71,18 +81,18 @@ function drawBoosters(ship) {
   }
 
   if (forwardBoost >= 2) {
-    flames.push(<polygon points="-3,-2 -1,-2 -2,-5" x="-20" fill="orange" key="1"/>);
-    flames.push(<polygon points="3,-2 1,-2 2,-5" x="-20" fill="orange" key="2"/>);
+    flames.push(<polygon points="-3,-2 -1,-2 -2,-5" x="-20" fill="orange" key="1" />);
+    flames.push(<polygon points="3,-2 1,-2 2,-5" x="-20" fill="orange" key="2" />);
   }
 
   if (forwardBoost >= 1) {
-    flames.push(<polygon points="-3,-2 -1,-2 -2,-3" x="-20" fill="red" key="3"/>);
-    flames.push(<polygon points="3,-2 1,-2 2,-3" x="-20" fill="red" key="4"/>);
+    flames.push(<polygon points="-3,-2 -1,-2 -2,-3" x="-20" fill="red" key="3" />);
+    flames.push(<polygon points="3,-2 1,-2 2,-3" x="-20" fill="red" key="4" />);
   }
 
   if (ship.controls.down) {
-    flames.push(<polygon points="-3,2 -1,2 -2,3" x="-20" fill="red" key="5"/>);
-    flames.push(<polygon points="3,2 1,2 2,3" x="-20" fill="red" key="6"/>);
+    flames.push(<polygon points="-3,2 -1,2 -2,3" x="-20" fill="red" key="5" />);
+    flames.push(<polygon points="3,2 1,2 2,3" x="-20" fill="red" key="6" />);
   }
 
   return flames;
