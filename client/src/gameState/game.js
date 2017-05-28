@@ -1,5 +1,5 @@
 import p2 from 'p2';
-import { createGame } from './gameRules';
+import { initialGameState, step } from './gameRules';
 
 export function makeInstance(levelDef) {
 
@@ -30,7 +30,6 @@ export function makeInstance(levelDef) {
 
     const steelMaterial = new p2.Material();
 
-    const game = createGame();
     setInterval(() => {
         dispatch({
             eventType: 'TIME',
@@ -38,7 +37,8 @@ export function makeInstance(levelDef) {
         });
     }, 1000);
 
-    let currentGameState = game.getCurrentState();
+    let currentGameState = { ...initialGameState, currentTime: Date.now(), endTime: Date.now() + 60 * 1000 };
+
     let currentBallLodgeConstraint = {
         playerId: null,
         p2Constraint: null,
@@ -50,7 +50,7 @@ export function makeInstance(levelDef) {
     world.addBody(gameBall.body);
 
     function dispatch(action) {
-        const [newState, pendingEffects] = game.dispatch(action);
+        const [newState, pendingEffects] = step(currentGameState, action);
         
         currentGameState = newState;
         const currentLodgedPlayerId = currentGameState.ballAttraction.lodgedInPlayer;
@@ -310,7 +310,7 @@ export function makeInstance(levelDef) {
     }
 
     function applyAuthorativeGameStateUpdate(newGameState) {
-        game.overrideState(newGameState);
+        currentGameState = newGameState;
     }
 
     function applyAuthorativeMovingThingUpdate(update) {
@@ -346,7 +346,7 @@ export function makeInstance(levelDef) {
     }
 
     function renderGameState() {
-        return game.getCurrentState();
+        return currentGameState;
     }
 
     const boosterForce = 200;

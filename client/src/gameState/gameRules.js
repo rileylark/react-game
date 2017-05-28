@@ -1,4 +1,4 @@
-const initialGameState = {
+export const initialGameState = {
     mode: 'playing',
     score: {
         blue: 0,
@@ -10,14 +10,13 @@ const initialGameState = {
         },
         lodgedInPlayer: null,
     },
-    currentPlayers: {},
-    pendingEffects: []
+    currentPlayers: {}
 };
 
 const actionHandlers = {};
 
 actionHandlers['GOAL'] = (previousState, action) => {
-    return {
+    return [{
         ...previousState,
         score: {
             ...previousState.score,
@@ -28,11 +27,11 @@ actionHandlers['GOAL'] = (previousState, action) => {
             lodgedInPlayer: null,
             gravityDisabledForPlayerId: null,
         }
-    };
+    }, []];
 }
 
 actionHandlers['ADD_PLAYER'] = (previousState, action) => {
-    return {
+    return [{
         ...previousState,
         currentPlayers: {
             ...previousState.currentPlayers,
@@ -40,21 +39,28 @@ actionHandlers['ADD_PLAYER'] = (previousState, action) => {
                 controls: {}
             }
         }
-    };
+    }, []];
 }
 
 actionHandlers['REMOVE_PLAYER'] = (previousState, action) => {
     const newPlayerThing = { ...previousState.currentPlayers };
     delete newPlayerThing[action.playerId];
 
-    return {
+    return [{
         ...previousState,
         currentPlayers: newPlayerThing
-    }
+    }, []];
 }
 
 actionHandlers['CONTROL_CHANGE'] = (previousState, action) => {
     let player = { ...previousState.currentPlayers[action.playerId] };
+    if (!player.controls) {
+        console.error("WHAT THE HELL");
+        console.error(action);
+        console.error(player);
+        console.error(previousState.currentPlayers);
+    }
+
     const shouldSendForward = !player.controls.sendForward && action.controlUpdate.sendForward && previousState.ballAttraction.lodgedInPlayer === action.playerId;
 
     player = {
@@ -77,7 +83,7 @@ actionHandlers['CONTROL_CHANGE'] = (previousState, action) => {
         newState = dislodgeBall(newState);
     }
 
-    return newState;
+    return [ newState, [] ];
 }
 
 actionHandlers['TIME'] = (previousState, action) => {
@@ -85,41 +91,41 @@ actionHandlers['TIME'] = (previousState, action) => {
         if (action.time > previousState.endTime) {
             if (previousState.score.blue === previousState.score.red) {
                 // overtime!
-                return {
+                return [{
                     ...previousState,
                     currentTime: action.time,
                     endTime: previousState.endTime + 30 * 1000,
-                };
+                }, []];
             } else {
-                return {
+                return [{
                     ...previousState,
                     mode: 'gameover',
                     winner: previousState.score.blue > previousState.score.red ? 'blue' : 'red',
                     nextGameStartTime: action.time + 10 * 1000,
                     currentTime: action.time
-                };
+                }, []];
             }
         } else {
-            return {
+            return [{
                 ...previousState,
                 currentTime: action.time
-            }
+            }, []];
         }
     } else {
         if (action.time > previousState.nextGameStartTime) {
-            return { ...initialGameState, endTime: action.time + 60 * 1000, currentTime: action.time };
+            return [{ ...initialGameState, endTime: action.time + 60 * 1000, currentTime: action.time }, []];
         } else {
-            return {
+            return [{
                 ...previousState,
                 currentTime: action.time
-            }
+            }, []]
         }
     }
 };
 
 actionHandlers['BALL_ENTERED_GRAVITY_WELL'] = (previousState, action) => {
     if (previousState.ballAttraction.inGravityWell.playerIds.indexOf(action.playerId) === -1) {
-        return {
+        return [{
             ...previousState,
             ballAttraction: {
                 ...previousState.ballAttraction,
@@ -128,9 +134,9 @@ actionHandlers['BALL_ENTERED_GRAVITY_WELL'] = (previousState, action) => {
                     playerIds: previousState.ballAttraction.inGravityWell.playerIds.concat([action.playerId])
                 }
             }
-        };
+        }, []];
     } else {
-        return previousState;
+        return [ previousState, []];
     }
 }
 
@@ -139,7 +145,7 @@ actionHandlers['BALL_LEFT_GRAVITY_WELL'] = (previousState, action) => {
 
     const gravityDisabledForPlayerId = previousState.ballAttraction.gravityDisabledForPlayerId === action.playerId ? null : previousState.ballAttraction.gravityDisabledForPlayerId;
     if (index) {
-        return {
+        return [{
             ...previousState,
             ballAttraction: {
                 ...previousState.ballAttraction,
@@ -149,9 +155,9 @@ actionHandlers['BALL_LEFT_GRAVITY_WELL'] = (previousState, action) => {
                 },
                 gravityDisabledForPlayerId
             }
-        };
+        }, []];
     } else {
-        return previousState;
+        return [previousState, []];
     }
 }
 
@@ -167,43 +173,27 @@ function dislodgeBall(previousState) {
 }
 
 actionHandlers['BALL_DISLODGED'] = (previousState, action) => {
-    return dislodgeBall(previousState); // action doesn't have extra data
+    return [
+        dislodgeBall(previousState), // action doesn't have extra data
+        []
+    ];
 };
 
 actionHandlers['BALL_HIT_SHIP_CENTER'] = (previousState, action) => {
-    return {
+    return [{
         ...previousState,
         ballAttraction: {
             ...previousState.ballAttraction,
             lodgedInPlayer: action.playerId,
         }
-    }
+    }, []];
 }
 
-function step(previousState, action) {
+export function step(previousState, action) {
     const handler = actionHandlers[action.eventType];
     if (handler) {
         return handler(previousState, action);
     } else {
-        return previousState;
+        return [previousState, []];
     }
-}
-
-export function createGame() {
-    let currentGameState = { ...initialGameState, currentTime: Date.now(), endTime: Date.now() + 60 * 1000 };
-
-    return {
-        dispatch(event) {
-            currentGameState = step(currentGameState, event);
-            return [currentGameState, []];
-        },
-
-        getCurrentState() {
-            return { ...currentGameState };
-        },
-
-        overrideState(newState) {
-            currentGameState = newState;
-        }
-    };
 }
