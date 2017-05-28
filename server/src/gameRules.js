@@ -191,27 +191,15 @@ function step(previousState, action) {
 
 export function createGame() {
     let currentGameState = { ...initialGameState, currentTime: Date.now(), endTime: Date.now() + 60 * 1000 };
-    const listeners = [];
-
-    function broadcast(state) {
-        listeners.forEach((listener) => {
-            listener(state);
-        });
-    }
 
     return {
         dispatch(event) {
             currentGameState = step(currentGameState, event);
-            broadcast(currentGameState)
+            return [currentGameState, []];
         },
 
         getCurrentState() {
             return { ...currentGameState };
-        },
-
-        addListener(newListener) {
-            listeners.push(newListener);
-            newListener(currentGameState);
         },
 
         overrideState(newState) {

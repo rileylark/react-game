@@ -32,7 +32,7 @@ export function makeInstance(levelDef) {
 
     const game = createGame();
     setInterval(() => {
-        game.dispatch({
+        dispatch({
             eventType: 'TIME',
             time: Date.now()
         });
@@ -49,7 +49,9 @@ export function makeInstance(levelDef) {
     const gameBall = makeBall();
     world.addBody(gameBall.body);
 
-    game.addListener((newState) => {
+    function dispatch(action) {
+        const [newState, pendingEffects] = game.dispatch(action);
+        
         currentGameState = newState;
         const currentLodgedPlayerId = currentGameState.ballAttraction.lodgedInPlayer;
 
@@ -74,7 +76,7 @@ export function makeInstance(levelDef) {
                 };
             }
         }
-    });
+    }
 
     const walls = levelDef.walls.map((wallDef) => {
         const shape = new p2.Box({
@@ -264,7 +266,7 @@ export function makeInstance(levelDef) {
         currentPlayers[playerId] = player;
         world.addBody(player.body);
 
-        game.dispatch({
+        dispatch({
             eventType: 'ADD_PLAYER',
             playerId
         });
@@ -275,7 +277,7 @@ export function makeInstance(levelDef) {
         world.removeBody(player.body);
         delete currentPlayers[playerId];
 
-        game.dispatch({
+        dispatch({
             eventType: 'REMOVE_PLAYER',
             playerId
         });
@@ -412,7 +414,7 @@ export function makeInstance(levelDef) {
                 p2.vec2.scale(force, force, -1);
                 playerBody.applyForce(force);
             } else {
-                game.dispatch({
+                dispatch({
                     eventType: 'BALL_HIT_SHIP_CENTER',
                     playerId: playerId,
                 });
@@ -432,7 +434,7 @@ export function makeInstance(levelDef) {
                 forEachPlayer((anotherPlayer) => {
                     if (anotherPlayer.id !== lodgedPlayer.id) {
                         if (shapeA === anotherPlayer.shape || shapeB === anotherPlayer.shape) {
-                            game.dispatch({
+                            dispatch({
                                 eventType: 'BALL_DISLODGED'
                             });
                         }
@@ -462,7 +464,7 @@ export function makeInstance(levelDef) {
                 if (shapes.indexOf(goal.shape) !== -1) {
                     ball.body.position = [0, 0];
                     ball.body.velocity = [0, 0];
-                    game.dispatch({
+                    dispatch({
                         eventType: 'GOAL',
                         team: goal.team
                     });
@@ -473,7 +475,7 @@ export function makeInstance(levelDef) {
             Object.keys(currentPlayers).forEach((playerId) => {
                 const player = currentPlayers[playerId];
                 if (shapes.indexOf(player.gravityWellShape) !== -1) {
-                    game.dispatch({
+                    dispatch({
                         eventType: 'BALL_ENTERED_GRAVITY_WELL',
                         team: player.team,
                         playerId: player.id
@@ -494,7 +496,7 @@ export function makeInstance(levelDef) {
             Object.keys(currentPlayers).forEach((playerId) => {
                 const player = currentPlayers[playerId];
                 if (shapes.indexOf(player.gravityWellShape) !== -1) {
-                    game.dispatch({
+                    dispatch({
                         eventType: 'BALL_LEFT_GRAVITY_WELL',
                         team: player.team,
                         playerId: player.id
@@ -515,7 +517,7 @@ export function makeInstance(levelDef) {
             ...newControls,
         };
 
-        game.dispatch({
+        dispatch({
             eventType: 'CONTROL_CHANGE',
             playerId: playerId,
             controlUpdate: newControls,
