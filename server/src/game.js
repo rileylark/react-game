@@ -436,8 +436,8 @@ export function makeInstance(levelDef) {
 
             const d2 = p2.vec2.squaredDistance(playerBody.position, ballBody.position);
 
-            if (d2 > 3) {
-                const forceMagnitude = 1000 / d2;
+            if (d2 > 16) {
+                const forceMagnitude = 5000 / d2;
 
                 const force = [];
                 p2.vec2.subtract(force, playerBody.position, ballBody.position);
