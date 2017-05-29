@@ -259,6 +259,7 @@ export function makeInstance(levelDef) {
                 goalies[goalieLine.goalieId] = {
                     body,
                     shape,
+                    goalieLine,
                     goalieId: goalieLine.goalieId,
                 };
             });
@@ -474,6 +475,35 @@ export function makeInstance(levelDef) {
         Object.keys(currentPlayers).forEach((playerId) => {
             const player = currentPlayers[playerId];
             applyControls(player);
+        });
+    });
+
+    // move goalies
+    world.on('postStep', () => {
+        Object.keys(currentGoalies).forEach((goalieId) => {
+            const goalie = currentGoalies[goalieId];
+
+            // first find where the ball is going on our goalie line
+            const eventualPositionOfBall = [];
+            p2.vec2.add(eventualPositionOfBall, gameBall.body.position, gameBall.body.velocity);
+
+            const intersectionPoint = [];
+            const intersects = p2.vec2.getLineSegmentsIntersection(intersectionPoint, goalie.goalieLine.start, goalie.goalieLine.end, gameBall.body.position, eventualPositionOfBall)
+
+            if (intersects) {
+                // move goalie towards that point!
+                const directionToPoint = [];
+                p2.vec2.subtract(directionToPoint, intersectionPoint, goalie.body.position);
+
+                p2.vec2.normalize(directionToPoint, directionToPoint);
+                p2.vec2.scale(directionToPoint, directionToPoint, 20);
+
+                // TODO: if this would move the goalie past the point of intersection... well, don't!
+
+                goalie.body.velocity = directionToPoint;
+            } else {
+                goalie.body.velocity = [0, 0];
+            }
         });
     });
 
