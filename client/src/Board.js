@@ -14,7 +14,7 @@ function drawWorld(world) {
   ];
 }
 
-export default function Board({ world, camera, localPlayer }) {
+export default function Board({ world, camera, localPlayer, gameState }) {
   if (!world.players || !world.ball) {
     return <div>{JSON.stringify(world)}</div>;
   } else {
@@ -26,7 +26,7 @@ export default function Board({ world, camera, localPlayer }) {
       <svg style={{ position: 'fixed', top: 0, bottom: 0, left: 0, right: 0 }} height="100%" width="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
         <g transform={`translate(${xOffset} ${yOffset}) scale(1, -1)`}>
           {drawnWorld}
-          {drawHud(localPlayer)}
+          {drawHud(localPlayer, gameState)}
         </g>
         <g transform={`translate(90, 20) scale(0.1, -0.1)`} opacity="0.75">
           <rect width="200" height="400" x="-100" y="-200" fill="white" />
@@ -59,13 +59,21 @@ function drawShip(ship) {
   );
 }
 
-function drawHud(localPlayer) {
-  return (
-    <g transform={`translate(${localPlayer.body.position[0]} ${localPlayer.body.position[1]}) rotate(${localPlayer.body.angle / Math.PI * 180})`} key={localPlayer.playerId}>
-      <line x1="0" y1="-400" x2="0" y2="400" stroke="lightgray" strokeWidth="0.05" strokeDasharray="1, 1"/>
-      <line x1="-400" y1="0" x2="400" y2="0" stroke="lightgray" strokeWidth="0.05" strokeDasharray="1, 1"/>
-    </g>
-  );
+function drawHud(localPlayer, gameState) {
+  const hudElements = [];
+
+  if (gameState.ballAttraction.lodgedInPlayer === localPlayer.playerId) {
+    hudElements.push(<g transform={`translate(${localPlayer.body.position[0]} ${localPlayer.body.position[1]}) rotate(${localPlayer.body.angle / Math.PI * 180})`} key={localPlayer.playerId} opacity="0.5">
+      <line x1="0" y1="-400" x2="0" y2="400" stroke="gray" strokeWidth="0.05" strokeDasharray="1, 1" />
+      <line x1="-400" y1="0" x2="400" y2="0" stroke="gray" strokeWidth="0.05" strokeDasharray="1, 1" />
+      <text transform={`translate(0, 20) rotate(${-localPlayer.body.angle / Math.PI * 180}) scale(.1, -.1)`} textAnchor="middle">W</text>
+      <text transform={`translate(0, -20) rotate(${-localPlayer.body.angle / Math.PI * 180}) scale(.1, -.1)`} textAnchor="middle">S</text>
+      <text transform={`translate(20, 0) rotate(${-localPlayer.body.angle / Math.PI * 180}) scale(.1, -.1)`} textAnchor="middle">D</text>
+      <text transform={`translate(-20, 0) rotate(${-localPlayer.body.angle / Math.PI * 180}) scale(.1, -.1)`} textAnchor="middle">A</text>
+    </g>);
+  }
+
+  return hudElements;
 }
 
 function drawBoosters(ship) {
