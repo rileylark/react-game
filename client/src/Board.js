@@ -60,16 +60,17 @@ function drawShip(ship) {
 }
 
 function drawHud(localPlayer, gameState) {
+  
   const hudElements = [];
 
   if (gameState.ballAttraction.lodgedInPlayer === localPlayer.playerId) {
-    hudElements.push(<g transform={`translate(${localPlayer.body.position[0]} ${localPlayer.body.position[1]}) rotate(${localPlayer.body.angle / Math.PI * 180})`} key={localPlayer.playerId} opacity="0.5">
+    hudElements.push(<g className='fadeIn' transform={`translate(${localPlayer.body.position[0]} ${localPlayer.body.position[1]}) rotate(${localPlayer.body.angle / Math.PI * 180})`} key={localPlayer.playerId} opacity="0.5">
       <line x1="0" y1="-400" x2="0" y2="400" stroke="gray" strokeWidth="0.05" strokeDasharray="1, 1" />
       <line x1="-400" y1="0" x2="400" y2="0" stroke="gray" strokeWidth="0.05" strokeDasharray="1, 1" />
-      <text transform={`translate(0, 20) rotate(${-localPlayer.body.angle / Math.PI * 180}) scale(.1, -.1)`} textAnchor="middle">W</text>
-      <text transform={`translate(0, -20) rotate(${-localPlayer.body.angle / Math.PI * 180}) scale(.1, -.1)`} textAnchor="middle">S</text>
-      <text transform={`translate(20, 0) rotate(${-localPlayer.body.angle / Math.PI * 180}) scale(.1, -.1)`} textAnchor="middle">D</text>
-      <text transform={`translate(-20, 0) rotate(${-localPlayer.body.angle / Math.PI * 180}) scale(.1, -.1)`} textAnchor="middle">A</text>
+      <text transform={`translate(0, 20) rotate(${-localPlayer.body.angle / Math.PI * 180}) scale(.1, -.1)`} textAnchor="middle" alignmentBaseline="central">W</text>
+      <text transform={`translate(0, -20) rotate(${-localPlayer.body.angle / Math.PI * 180}) scale(.1, -.1)`} textAnchor="middle" alignmentBaseline="central">S</text>
+      <text transform={`translate(20, 0) rotate(${-localPlayer.body.angle / Math.PI * 180}) scale(.1, -.1)`} textAnchor="middle" alignmentBaseline="central">D</text>
+      <text transform={`translate(-20, 0) rotate(${-localPlayer.body.angle / Math.PI * 180}) scale(.1, -.1)`} textAnchor="middle" alignmentBaseline="central">A</text>
     </g>);
   }
 
