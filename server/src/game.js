@@ -9,7 +9,8 @@ export function makeInstance(levelDef) {
         'BLUE_PLAYER',
         'BLUE_PLAYER_GRAVITY_WELL',
         'BALL',
-        'LEVEL'
+        'LEVEL',
+        'GOALIE',
     ];
 
     const collisionBits = {};
@@ -50,9 +51,11 @@ export function makeInstance(levelDef) {
     const gameBall = makeBall();
     world.addBody(gameBall.body);
 
+    const currentGoalies = makeGoalies(levelDef.goals);
+
     function dispatch(action) {
         const [newState, pendingEffects] = step(currentGameState, action);
-        
+
         currentGameState = newState;
         const currentLodgedPlayerId = currentGameState.ballAttraction.lodgedInPlayer;
 
@@ -100,7 +103,7 @@ export function makeInstance(levelDef) {
         gameBall.body.position = [...player.body.position];
         gameBall.body.velocity = [...player.body.velocity];
 
-        
+
         const ballImpulse = [];
         p2.vec2.rotate(ballImpulse, directionUnitVector, player.body.angle);
         p2.vec2.scale(ballImpulse, ballImpulse, shotImpulse);
@@ -140,7 +143,12 @@ export function makeInstance(levelDef) {
         const body = new p2.Body({ mass: 0, position: goalDef.position });
         body.addShape(shape);
 
-        return { shape, body, team: goalDef.team };
+        return {
+            shape,
+            body,
+            team: goalDef.team,
+            goalieLines: goalDef.goalieLines,
+        };
     });
 
     goals.forEach((goal) => { world.addBody(goal.body) });
@@ -179,12 +187,12 @@ export function makeInstance(levelDef) {
 
         if (team === 'blue') {
             shape.collisionGroup = collisionBits['BLUE_PLAYER'];
-            shape.collisionMask = makeCollisionMask(['RED_PLAYER', 'LEVEL']);
+            shape.collisionMask = makeCollisionMask(['RED_PLAYER', 'LEVEL', 'GOALIE']);
             gravityWellShape.collisionGroup = collisionBits['BLUE_PLAYER_GRAVITY_WELL'];
 
         } else if (team === 'red') {
             shape.collisionGroup = collisionBits['RED_PLAYER'];
-            shape.collisionMask = makeCollisionMask(['BLUE_PLAYER', 'LEVEL']);
+            shape.collisionMask = makeCollisionMask(['BLUE_PLAYER', 'LEVEL', 'GOALIE']);
             gravityWellShape.collisionGroup = collisionBits['RED_PLAYER_GRAVITY_WELL'];
         }
 
@@ -214,7 +222,7 @@ export function makeInstance(levelDef) {
             radius: 2,
             material: steelMaterial,
             collisionGroup: collisionBits['BALL'],
-            collisionMask: makeCollisionMask(['BLUE_PLAYER', 'RED_PLAYER', 'LEVEL', 'BLUE_PLAYER_GRAVITY_WELL', 'RED_PLAYER_GRAVITY_WELL']),
+            collisionMask: makeCollisionMask(['BLUE_PLAYER', 'RED_PLAYER', 'LEVEL', 'BLUE_PLAYER_GRAVITY_WELL', 'RED_PLAYER_GRAVITY_WELL', 'GOALIE']),
         });
 
         var body = new p2.Body({
@@ -225,6 +233,38 @@ export function makeInstance(levelDef) {
 
         body.addShape(shape);
         return { shape, body };
+    }
+
+    function makeGoalies(goals) {
+        const goalies = {};
+
+        goals.forEach((goal) => {
+            goal.goalieLines.forEach((goalieLine) => {
+
+                const shape = new p2.Circle({
+                    radius: 5,
+                    material: steelMaterial,
+                    collisionGroup: collisionBits['GOALIE'],
+                    collisionMask: makeCollisionMask(['BALL', 'RED_PLAYER', 'BLUE_PLAYER'])
+                });
+
+                var body = new p2.Body({
+                    mass: 0,
+                    position: goalieLine.initialGoaliePosition
+                });
+
+                body.addShape(shape);
+                world.addBody(body);
+
+                goalies[goalieLine.goalieId] = {
+                    body,
+                    shape,
+                    goalieId: goalieLine.goalieId,
+                };
+            });
+        });
+
+        return goalies;
     }
 
     // Create contact material between the two materials.
@@ -292,6 +332,7 @@ export function makeInstance(levelDef) {
             width: goal.shape.width,
             height: goal.shape.height,
             team: goal.team,
+            goalieLines: goal.goalieLines
         };
     }
 
@@ -333,9 +374,19 @@ export function makeInstance(levelDef) {
             body: renderBody(gameBall.body)
         };
 
+        const goalies = Object.keys(currentGoalies).map((goalieId) => {
+            const goalie = currentGoalies[goalieId];
+
+            return {
+                body: renderBody(goalie.body),
+                goalieId
+            };
+        });
+
         return {
             players,
             ball,
+            goalies,
         };
     }
 
@@ -370,6 +421,14 @@ export function makeInstance(levelDef) {
         gameBall.body.position = avg(update.ball.body.position, gameBall.body.position, 0.3);
         gameBall.body.angle = update.ball.body.angle;
         gameBall.body.velocity = update.ball.body.velocity;
+
+        // also goalies!
+        update.goalies.forEach((remoteGoalie) => {
+            let localGoalie = currentGoalies[remoteGoalie.goalieId];
+            localGoalie.body.position = avg(remoteGoalie.body.position, localGoalie.body.position, 0.3);
+            localGoalie.body.velocity = remoteGoalie.body.velocity;
+            localGoalie.body.angle = remoteGoalie.body.angle;
+        });
     }
 
     function renderLevel() {

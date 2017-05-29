@@ -9,6 +9,7 @@ function drawWorld(world) {
   return [
     world.level.walls.map(drawWall),
     world.level.goals.map(drawGoal),
+    world.goalies.map(drawGoalie),
     world.players.map(drawShip),
     [world.ball].map(drawBall),
   ];
@@ -60,7 +61,7 @@ function drawShip(ship) {
 }
 
 function drawHud(localPlayer, gameState) {
-  
+
   const hudElements = [];
 
   // This is maybe helpful for learning controls but too ugly to bear
@@ -119,13 +120,34 @@ function drawWall(wall, index) {
   </g>;
 }
 
+function drawGoalie(goalie, index) {
+  return (
+    <g transform={`translate(${goalie.body.position[0]} ${goalie.body.position[1]})`} key={index}>
+      <circle cx="0" cy="0" r="5" stroke="black" strokeWidth="0.5" fill='gray' />
+    </g>
+  );
+}
+
+function drawGoalieLine(goalieLine, index) {
+  return <line
+    key={index}
+    strokeWidth="0.1"
+    stroke="green"
+    strokeDasharray="0.5, 0.5"
+    x1={goalieLine.start[0]}
+    y1={goalieLine.start[1]}
+    x2={goalieLine.end[0]}
+    y2={goalieLine.end[1]}
+  />;
+}
+
 function drawGoal(goal, index) {
   const topLeft = {
     x: goal.x - goal.width / 2,
     y: goal.y - goal.height / 2
   }
 
-  return <g transform={`translate(${topLeft.x} ${topLeft.y})`} key={index}>
+  return [<g transform={`translate(${topLeft.x} ${topLeft.y})`} key={index}>
     <rect width={goal.width} height={goal.height} fill={teamFills[goal.team]} />
-  </g>;
+  </g>, goal.goalieLines.map(drawGoalieLine)];
 }

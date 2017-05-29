@@ -30,7 +30,8 @@ let state = {
     level: {
       walls: [],
       goals: [],
-    }
+    },
+    goalies: [],
   },
   gameState: {
     score: {
