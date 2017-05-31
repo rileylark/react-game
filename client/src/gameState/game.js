@@ -20,6 +20,8 @@ export function makeInstance(levelDef) {
 
     const maxSecondsOfBoost = 1;
     const shotImpulse = 50;
+    const shipDampingWithoutBall = 0.7;
+    const shipDampingWithBall = 0.85;
 
     function makeCollisionMask(collisionBitNames) {
         return collisionBitNames.reduce((mask, name) => mask | collisionBits[name], 0);
@@ -63,6 +65,7 @@ export function makeInstance(levelDef) {
             // we need to change the constraint situation
             if (currentBallLodgeConstraint.p2Constraint) {
                 world.removeConstraint(currentBallLodgeConstraint.p2Constraint);
+                currentPlayers[currentBallLodgeConstraint.playerId].body.damping = shipDampingWithoutBall; 
                 currentBallLodgeConstraint = {
                     playerId: null,
                     p2Constraint: null,
@@ -74,6 +77,7 @@ export function makeInstance(levelDef) {
                 const newP2Constraint = new p2.DistanceConstraint(gameBall.body, currentPlayers[currentLodgedPlayerId].body, { distance: 0, maxForce: 750 });
                 gameBall.body.position = [...currentPlayers[currentLodgedPlayerId].body.position];
                 gameBall.body.velocity = [...currentPlayers[currentLodgedPlayerId].body.velocity];
+                currentPlayers[currentLodgedPlayerId].body.damping = shipDampingWithBall;
                 world.addConstraint(newP2Constraint);
 
                 currentBallLodgeConstraint = {
@@ -199,7 +203,7 @@ export function makeInstance(levelDef) {
         var body = new p2.Body({
             mass: 5,
             position: spawnLocation,
-            damping: 0.7,
+            damping: shipDampingWithoutBall,
             angle: team === 'red' ? Math.PI : 0,
         });
 
