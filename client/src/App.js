@@ -41,6 +41,22 @@ function Scoreboard({ gameState, localPlayer }) {
             </tr>
           </tbody>
         </table>
+
+        <div style={{ width: '200px' }}>
+          <table>
+            <tbody>
+              <tr>
+                <td>Arrows</td><td>Turn & move</td>
+              </tr>
+              <tr>
+                <td>Space</td><td>Boost</td>
+              </tr>
+              <tr>
+                <td>W,A,S,D</td><td>Pass & shoot</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   } else {
