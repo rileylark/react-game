@@ -479,13 +479,16 @@ export function makeInstance(levelDef) {
     });
 
     // move goalies
+    const goalieTolerance = 1;
+    const goalieSpeed = 25;
     world.on('postStep', () => {
         Object.keys(currentGoalies).forEach((goalieId) => {
             const goalie = currentGoalies[goalieId];
 
             // first find where the ball is going on our goalie line
             const eventualPositionOfBall = [];
-            p2.vec2.add(eventualPositionOfBall, gameBall.body.position, gameBall.body.velocity);
+            p2.vec2.scale(eventualPositionOfBall, gameBall.body.velocity, 3); // so the goalie sees it coming from 3s away
+            p2.vec2.add(eventualPositionOfBall, gameBall.body.position, eventualPositionOfBall);
 
             const intersectionPoint = [];
             const intersects = p2.vec2.getLineSegmentsIntersection(intersectionPoint, goalie.goalieLine.start, goalie.goalieLine.end, gameBall.body.position, eventualPositionOfBall)
@@ -494,15 +497,24 @@ export function makeInstance(levelDef) {
                 // move goalie towards that point!
                 const directionToPoint = [];
                 p2.vec2.subtract(directionToPoint, intersectionPoint, goalie.body.position);
+                const d2 = p2.vec2.squaredLength(directionToPoint);
 
-                p2.vec2.normalize(directionToPoint, directionToPoint);
-                p2.vec2.scale(directionToPoint, directionToPoint, 20);
+                if (d2 > goalieTolerance) {
+                    p2.vec2.normalize(directionToPoint, directionToPoint);
+                    p2.vec2.scale(directionToPoint, directionToPoint, goalieSpeed);
+                    goalie.body.velocity = directionToPoint;
+                } else {
+                    goalie.body.velocity = [0, 0];
+                }
 
-                // TODO: if this would move the goalie past the point of intersection... well, don't!
-
-                goalie.body.velocity = directionToPoint;
             } else {
-                goalie.body.velocity = [0, 0];
+                if ((gameBall.body.position[0] < goalie.body.position[0] - goalieTolerance) && (goalie.body.position[0] > goalie.goalieLine.start[0])) {
+                    goalie.body.velocity = [-goalieSpeed, 0];
+                } else if ((gameBall.body.position[0] > goalie.body.position[0] + goalieTolerance) && (goalie.body.position[0] < goalie.goalieLine.end[0])) {
+                    goalie.body.velocity = [goalieSpeed, 0];
+                } else {
+                    goalie.body.velocity = [0, 0]
+                }
             }
         });
     });
