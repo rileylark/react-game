@@ -61,11 +61,15 @@ export function makeInstance(levelDef) {
         currentGameState = newState;
         const currentLodgedPlayerId = currentGameState.ballAttraction.lodgedInPlayer;
 
-        if (currentLodgedPlayerId !== currentBallLodgeConstraint.playerId) {
+        if ((currentLodgedPlayerId !== currentBallLodgeConstraint.playerId) || (Object.keys(currentPlayers).indexOf(currentBallLodgeConstraint.playerId) === -1)) {
             // we need to change the constraint situation
             if (currentBallLodgeConstraint.p2Constraint) {
                 world.removeConstraint(currentBallLodgeConstraint.p2Constraint);
-                currentPlayers[currentBallLodgeConstraint.playerId].body.damping = shipDampingWithoutBall; 
+
+                if (currentPlayers[currentBallLodgeConstraint.playerId]) {
+                    currentPlayers[currentBallLodgeConstraint.playerId].body.damping = shipDampingWithoutBall;
+                }
+
                 currentBallLodgeConstraint = {
                     playerId: null,
                     p2Constraint: null,
